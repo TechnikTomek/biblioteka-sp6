@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katalog – Biblioteka SP nr 6</title>
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Przejdź do treści</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
+      <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
+    </a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
+      <a href="/">Start</a>
+      <a href="/katalog.html">Katalog</a>
+      <a href="/#godziny">Godziny</a>
+      <a href="/#regulamin">Regulamin</a>
+      <a href="/#kontakt">Kontakt</a>
+      <div id="nav-auth"></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="block">
+    <div class="container">
+      <h1>Katalog książek</h1>
+      <p class="muted" id="catalog-hint">Zaloguj się, aby rezerwować książki online.</p>
+      <div id="msg" class="alert" hidden role="status"></div>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Szukaj po tytule lub autorze…" aria-label="Szukaj">
+        <select id="cat" aria-label="Kategoria"><option value="">Wszystkie kategorie</option></select>
+      </div>
+      <div class="grid" id="books"></div>
+      <p class="empty" id="empty" hidden>Nie znaleziono książek pasujących do wyszukiwania.</p>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+    <a href="/#kontakt">Kontakt z biblioteką</a>
+  </div>
+</footer>
+<script type="module">
+  import { userPromise, api } from "/js/app.js";
+  import { BOOKS, CATEGORIES } from "/js/books.js";
+  import { bookCard } from "/js/ui.js";
+
+  const q = document.getElementById("q"), cat = document.getElementById("cat");
+  const grid = document.getElementById("books"), empty = document.getElementById("empty"), msg = document.getElementById("msg");
+  for (const [k, v] of Object.entries(CATEGORIES)) cat.add(new Option(v, k));
+
+  let user = null, reserved = new Set();
+  const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+
+  function action(b) {
+    if (!user) return `<a class="btn btn-small btn-ghost" href="/logowanie.html?next=/katalog.html">Zaloguj, by zarezerwować</a>`;
+    if (reserved.has(b.id)) return `<button class="btn btn-small btn-ghost" disabled>Zarezerwowano ✓</button>`;
+    return `<button class="btn btn-small" data-reserve="${b.id}">Zarezerwuj</button>`;
+  }
+  function render() {
+    const term = norm(q.value.trim());
+    const list = BOOKS.filter(b => (!cat.value || b.category === cat.value) && (!term || norm(b.title + " " + b.author).includes(term)));
+    grid.innerHTML = list.map(b => bookCard(b, action(b))).join("");
+    empty.hidden = list.length > 0;
+  }
+  function show(text, type) { msg.textContent = text; msg.className = "alert " + type; msg.hidden = false; }
+
+  q.addEventListener("input", render);
+  cat.addEventListener("change", render);
+  grid.addEventListener("click", async e => {
+    const btn = e.target.closest("[data-reserve]");
+    if (!btn) return;
+    btn.disabled = true;
+    try {
+      await api("/api/reservations", { method: "POST", body: { bookId: btn.dataset.reserve } });
+      reserved.add(btn.dataset.reserve);
+      show("Książka zarezerwowana! Odbierz ją w bibliotece w ciągu 5 dni roboczych.", "ok");
+      render();
+    } catch (err) { show(err.message, "error"); btn.disabled = false; }
+  });
+
+  render();
+  user = await userPromise;
+  if (user) {
+    document.getElementById("catalog-hint").textContent = `Witaj, ${user.name}! Możesz zarezerwować do 3 książek.`;
+    try { (await api("/api/reservations")).reservations.forEach(r => reserved.add(r.bookId)); } catch {}
+    render();
+  }
+</script>
+</body>
+</html>

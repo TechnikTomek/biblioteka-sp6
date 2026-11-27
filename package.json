@@ -1,0 +1,10 @@
+{
+  "name": "biblioteka-sp6",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Strona biblioteki Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego z systemem logowania (Netlify Functions + Netlify Blobs)",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

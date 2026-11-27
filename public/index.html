@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biblioteka SP nr 6 im. M. E. Andriollego</title>
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Przejdź do treści</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
+      <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
+    </a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
+      <a href="/">Start</a>
+      <a href="/katalog.html">Katalog</a>
+      <a href="/#godziny">Godziny</a>
+      <a href="/#regulamin">Regulamin</a>
+      <a href="/#kontakt">Kontakt</a>
+      <div id="nav-auth"></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">Szkoła Podstawowa Nr 6</p>
+        <h1>Biblioteka szkolna im.&nbsp;Michała Elwiro Andriollego</h1>
+        <p class="lead">Miejsce dla ciekawych świata. Wypożyczaj lektury, odkrywaj nowości, rezerwuj książki online i przychodź na zajęcia czytelnicze.</p>
+        <div class="actions">
+          <a href="/katalog.html" class="btn">Przeglądaj katalog</a>
+          <a href="/logowanie.html" class="btn btn-ghost" id="hero-login">Załóż konto czytelnika</a>
+        </div>
+      </div>
+      <svg class="hero-art" viewBox="0 0 300 260" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M30 70c40-18 80-14 120 10 40-24 80-28 120-10v150c-40-18-80-14-120 10-40-24-80-28-120-10z" fill="color-mix(in srgb, currentColor 8%, transparent)"/>
+        <path d="M150 80v150"/>
+        <path d="M55 100c25-8 50-6 75 4M55 125c25-8 50-6 75 4M55 150c25-8 50-6 75 4M55 175c25-8 50-6 75 4" opacity=".55"/>
+        <path d="M170 104c25-10 50-12 75-4M170 129c25-10 50-12 75-4M170 154c25-10 50-12 75-4M170 179c25-10 50-12 75-4" opacity=".55"/>
+        <path d="M210 30c0 18 10 26 22 30-12 4-22 12-22 30 0-18-10-26-22-30 12-4 22-12 22-30z" fill="currentColor" stroke="none" opacity=".8"/>
+        <path d="M95 20c0 10 6 15 12 17-6 2-12 7-12 17 0-10-6-15-12-17 6-2 12-7 12-17z" fill="currentColor" stroke="none" opacity=".5"/>
+      </svg>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="container">
+      <h2>Co oferujemy</h2>
+      <p class="muted">Biblioteka służy uczniom, nauczycielom i rodzicom naszej szkoły.</p>
+      <div class="grid" style="margin-top:24px">
+        <div class="card"><h3>📚 Wypożyczenia</h3><p class="muted">Lektury dla wszystkich klas, literatura młodzieżowa, popularnonaukowa i komiksy.</p></div>
+        <div class="card"><h3>🔖 Rezerwacje online</h3><p class="muted">Po zalogowaniu zarezerwujesz do 3 książek – odbierzesz je w bibliotece.</p></div>
+        <div class="card"><h3>💻 Czytelnia</h3><p class="muted">Ciche miejsce do nauki, komputery z dostępem do internetu i encyklopedie.</p></div>
+        <div class="card"><h3>🎭 Wydarzenia</h3><p class="muted">Konkursy czytelnicze, spotkania z autorami, Narodowe Czytanie i lekcje biblioteczne.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="container">
+      <h2>Nowości na półkach</h2>
+      <div class="grid" id="new-books" style="margin-top:24px"></div>
+      <p style="margin-top:24px"><a href="/katalog.html" class="btn btn-ghost">Zobacz cały katalog →</a></p>
+    </div>
+  </section>
+
+  <section class="block" id="godziny">
+    <div class="container two-col">
+      <div>
+        <h2>Godziny otwarcia</h2>
+        <table class="hours">
+          <tr><td>Poniedziałek</td><td>7:45 – 15:00</td></tr>
+          <tr><td>Wtorek</td><td>7:45 – 15:00</td></tr>
+          <tr><td>Środa</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Czwartek</td><td>7:45 – 15:00</td></tr>
+          <tr><td>Piątek</td><td>7:45 – 13:30</td></tr>
+        </table>
+        <p class="muted" style="margin-top:12px">W ostatnim tygodniu przed końcem roku szkolnego biblioteka przyjmuje tylko zwroty.</p>
+      </div>
+      <div>
+        <h2>Nasz patron</h2>
+        <p><strong>Michał Elwiro Andriolli</strong> (1836–1893) – malarz, rysownik i jeden z najwybitniejszych polskich ilustratorów XIX wieku. Stworzył słynne ilustracje do <em>Pana Tadeusza</em>, utworów Elizy Orzeszkowej, Józefa Ignacego Kraszewskiego i Juliusza Słowackiego.</p>
+        <p>Uważany jest za twórcę charakterystycznej drewnianej architektury letniskowej, nazywanej stylem <em>świdermajer</em>.</p>
+        <blockquote>„Książka to przyjaciel, który nigdy nie zawodzi.”</blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt" id="regulamin">
+    <div class="container">
+      <h2>Regulamin w skrócie</h2>
+      <ol class="rules">
+        <li>Z biblioteki mogą korzystać uczniowie, nauczyciele i pracownicy szkoły oraz rodzice uczniów.</li>
+        <li>Jednorazowo można wypożyczyć do 3 książek na okres 2 tygodni (lektury – na 3 tygodnie).</li>
+        <li>Termin zwrotu można przedłużyć, jeśli na książkę nie czeka inny czytelnik.</li>
+        <li>Rezerwacja online jest ważna 5 dni roboczych – po tym czasie książka wraca na półkę.</li>
+        <li>Czytelnik dba o wypożyczone książki. Zgubioną lub zniszczoną książkę należy odkupić lub zastąpić inną, wskazaną przez bibliotekarza.</li>
+        <li>Przed końcem roku szkolnego wszystkie książki należy zwrócić do biblioteki.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" id="kontakt">
+    <div class="container two-col">
+      <div>
+        <h2>Kontakt</h2>
+        <p><strong>Biblioteka Szkoły Podstawowej Nr 6<br>im. Michała Elwiro Andriollego</strong></p>
+        <p class="muted">Adres: <span>[uzupełnij adres szkoły]</span><br>
+          Telefon: <span>[uzupełnij numer]</span><br>
+          E-mail: <span>[uzupełnij e-mail biblioteki]</span></p>
+      </div>
+      <div class="card">
+        <h3>Masz pytanie o książkę?</h3>
+        <p class="muted">Zajrzyj do biblioteki w godzinach otwarcia lub zaloguj się i zarezerwuj ją online – przygotujemy ją dla Ciebie.</p>
+        <a href="/katalog.html" class="btn btn-small">Szukaj w katalogu</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+    <a href="/#kontakt">Kontakt z biblioteką</a>
+  </div>
+</footer>
+<script type="module">
+  import { userPromise } from "/js/app.js";
+  import { BOOKS } from "/js/books.js";
+  import { bookCard } from "/js/ui.js";
+  document.getElementById("new-books").innerHTML = BOOKS.filter(b => b.isNew).slice(0, 4).map(b => bookCard(b)).join("");
+  userPromise.then(u => { if (u) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "/konto.html"; } });
+</script>
+</body>
+</html>

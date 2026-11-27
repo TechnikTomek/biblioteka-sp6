@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logowanie – Biblioteka SP nr 6</title>
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Przejdź do treści</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
+      <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
+    </a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
+      <a href="/">Start</a>
+      <a href="/katalog.html">Katalog</a>
+      <a href="/#godziny">Godziny</a>
+      <a href="/#regulamin">Regulamin</a>
+      <a href="/#kontakt">Kontakt</a>
+      <div id="nav-auth"></div>
+    </nav>
+  </div>
+</header>
+<main id="main" class="container auth-wrap">
+  <div class="card auth-card">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="login">Logowanie</button>
+      <button role="tab" aria-selected="false" data-tab="register">Rejestracja</button>
+    </div>
+    <div id="msg" class="alert" hidden role="alert"></div>
+
+    <form id="login" novalidate>
+      <h1 style="font-size:1.7rem">Witaj ponownie</h1>
+      <div class="field"><label for="l-email">E-mail</label><input id="l-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="l-pass">Hasło</label><input id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn" style="width:100%">Zaloguj się</button>
+    </form>
+
+    <form id="register" novalidate hidden>
+      <h1 style="font-size:1.7rem">Załóż konto czytelnika</h1>
+      <div class="field"><label for="r-name">Imię i nazwisko</label><input id="r-name" name="name" autocomplete="name" required></div>
+      <div class="field"><label for="r-klasa">Klasa</label><input id="r-klasa" name="klasa" placeholder="np. 5b lub „nauczyciel”"></div>
+      <div class="field"><label for="r-email">E-mail</label><input id="r-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="r-pass">Hasło</label><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required><small>Co najmniej 8 znaków.</small></div>
+      <div class="field"><label for="r-code">Kod szkoły</label><input id="r-code" name="code" autocomplete="off"><small>Kod otrzymasz od bibliotekarza lub wychowawcy.</small></div>
+      <button class="btn" style="width:100%">Utwórz konto</button>
+    </form>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+    <a href="/#kontakt">Kontakt z biblioteką</a>
+  </div>
+</footer>
+<script type="module">
+  import { userPromise, api } from "/js/app.js";
+  const params = new URLSearchParams(location.search);
+  const next = (params.get("next") || "").startsWith("/") && !params.get("next").startsWith("//") ? params.get("next") : "/konto.html";
+  const msg = document.getElementById("msg");
+  const forms = { login: document.getElementById("login"), register: document.getElementById("register") };
+  const tabs = document.querySelectorAll("[data-tab]");
+
+  function select(name) {
+    tabs.forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    for (const [k, f] of Object.entries(forms)) f.hidden = k !== name;
+    msg.hidden = true;
+  }
+  tabs.forEach(t => t.addEventListener("click", () => select(t.dataset.tab)));
+  if (location.hash === "#rejestracja") select("register");
+
+  for (const [action, form] of Object.entries(forms)) {
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = form.querySelector("button");
+      btn.disabled = true; msg.hidden = true;
+      try {
+        await api(`/api/auth/${action}`, { method: "POST", body: Object.fromEntries(new FormData(form)) });
+        location.href = next;
+      } catch (err) {
+        msg.textContent = err.message; msg.className = "alert error"; msg.hidden = false;
+        btn.disabled = false;
+      }
+    });
+  }
+  userPromise.then(u => { if (u) location.replace(next); });
+</script>
+</body>
+</html>
