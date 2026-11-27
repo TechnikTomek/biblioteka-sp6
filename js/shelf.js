@@ -10,7 +10,9 @@ const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const hashN = (s, mod) => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % mod; };
 const shortTitle = (t) => t.split(/[,.]/)[0];
 // Jedna lista funkcji we wszystkich klatkach = płynna interpolacja 3D
-const T = (ty, rx, rz, s) => `perspective(900px) translateY(${ty}px) rotateX(${rx}deg) rotateZ(${rz}deg) scale(${s})`;
+const T = (ty, rx, rz, s, ry = 0) => `perspective(900px) translateY(${ty}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`;
+// Moment (0–1), w którym książka stoi bokiem i podmieniamy grzbiet na okładkę
+const TURN = 0.43;
 const LAND_RX = 50, LAND_RZ = -7;
 
 export function initShelf(stage, { featuredId } = {}) {
@@ -49,24 +51,47 @@ export function initShelf(stage, { featuredId } = {}) {
   }
 
   function frames(s, t) {
-    const midX = (s.x + t.x) / 2 + (t.x > s.x ? -30 : 30);
-    const midY = Math.min(s.y, t.y) - 50;
-    const mw = (s.w + t.w) / 2 + 20, mh = (s.h + t.h) / 2;
+    const sw = stage.clientWidth;
+    // pozycja „w powietrzu” przed półką: okładka nad miejscem, z którego wyjęto książkę
+    const hx = Math.max(0, Math.min(sw - t.w, s.x + s.w / 2 - t.w / 2));
+    const hy = s.y + s.h - t.h - 6;
+    const edge = { x: s.x + s.w / 2 - 6, y: s.y - 14, w: 12, h: s.h };
+    const out = { x: s.x, y: s.y - 14, w: s.w, h: s.h };
+    const ease = { lin: "linear", out: "cubic-bezier(.2,.7,.2,1)", inOut: "cubic-bezier(.45,.05,.3,1)", in: "cubic-bezier(.5,0,.75,0)" };
     return [
-      { ...box(s), transform: T(0, 0, 0, 1), offset: 0 },
-      { ...box(s), transform: T(-30, -8, 0, 1.1), offset: 0.18 },                       // wysuwa się z półki
-      { ...box({ x: midX, y: midY, w: mw, h: mh }), transform: T(-20, 10, -16, 1.12), offset: 0.55 }, // leci i obraca się
-      { ...box(t), transform: T(0, LAND_RX + 6, LAND_RZ, 1.03), offset: 0.86 },          // opada na stół
-      { ...box(t), transform: T(0, LAND_RX, LAND_RZ, 1), offset: 1 },                    // lekko się „odbija”
+      // 1. palec przechyla górę grzbietu do siebie
+      { ...box(s), transform: T(0, 0, 0, 1), transformOrigin: "50% 100%", offset: 0, easing: ease.out },
+      { ...box(s), transform: T(0, -24, 0, 1.02), transformOrigin: "50% 100%", offset: 0.12, easing: ease.inOut },
+      // 2. książka wysuwa się z regału w stronę widza
+      { ...box(out), transform: T(-4, -6, 0, 1.22), transformOrigin: "50% 100%", offset: 0.27, easing: ease.inOut },
+      { ...box(out), transform: T(-10, 0, 0, 1.3), transformOrigin: "50% 50%", offset: 0.34, easing: ease.in },
+      // 3. obraca się w powietrzu – najpierw bokiem…
+      { ...box(edge), transform: T(-12, 0, 0, 1.3, 90), transformOrigin: "50% 50%", offset: TURN, easing: ease.out },
+      // …potem pokazuje okładkę
+      { ...box({ x: hx, y: hy, w: t.w, h: t.h }), transform: T(-14, 0, -3, 1.18, 0), transformOrigin: "50% 50%", offset: 0.53, easing: ease.inOut },
+      { ...box({ x: hx, y: hy - 8, w: t.w, h: t.h }), transform: T(-18, -4, -6, 1.18), transformOrigin: "50% 60%", offset: 0.62, easing: ease.inOut },
+      // 4. leci na stół i kładzie się
+      { ...box(t), transform: T(0, LAND_RX + 7, LAND_RZ, 1.03), transformOrigin: "50% 60%", offset: 0.9, easing: ease.out },
+      { ...box(t), transform: T(0, LAND_RX, LAND_RZ, 1), transformOrigin: "50% 60%", offset: 1 },
     ];
   }
 
   function crossfade(f, dur, toCover) {
-    const show = [{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.55 }, { opacity: 1 }];
-    const hide = [{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.55 }, { opacity: 0 }];
+    const show = [{ opacity: 0 }, { opacity: 0, offset: TURN - 0.005 }, { opacity: 1, offset: TURN + 0.005 }, { opacity: 1 }];
+    const hide = [{ opacity: 1 }, { opacity: 1, offset: TURN - 0.005 }, { opacity: 0, offset: TURN + 0.005 }, { opacity: 0 }];
     const o = { duration: dur, fill: "forwards", direction: toCover ? "normal" : "reverse" };
     f.querySelector(".face-cover").animate(show, o);
     f.querySelector(".face-spine").animate(hide, o);
+  }
+
+  // Sąsiednie książki chwieją się, gdy jedna zostaje wyciągnięta lub wstawiona
+  function wobble(spine, delay) {
+    if (reduce()) return;
+    const prev = spine.previousElementSibling, next = spine.nextElementSibling;
+    const k = (deg) => [{ transform: "rotate(0)" }, { transform: `rotate(${deg}deg)`, offset: 0.35 }, { transform: `rotate(${-deg / 3}deg)`, offset: 0.7 }, { transform: "rotate(0)" }];
+    const o = { duration: 650, delay, easing: "ease-out" };
+    prev?.animate(k(3), o);
+    next?.animate(k(-3), o);
   }
 
   function dust() {
@@ -104,13 +129,14 @@ export function initShelf(stage, { featuredId } = {}) {
     const f = makeFly(b);
     spine.classList.add("out");
     spine.setAttribute("aria-pressed", "true");
-    const dur = reduce() ? 1 : 1350;
-    const a = f.animate(frames(s, t), { duration: dur, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" });
+    const dur = reduce() ? 1 : 2300;
+    const a = f.animate(frames(s, t), { duration: dur, fill: "forwards" });
     crossfade(f, dur, true);
+    wobble(spine, dur * 0.2);
     const cur = { b, fly: f, spine };
     current = cur;
     stage.classList.add("has-book");
-    setTimeout(() => { if (current === cur) { dust(); renderInfo(b); } }, dur * 0.86);
+    setTimeout(() => { if (current === cur) { dust(); renderInfo(b); } }, dur * 0.9);
     await a.finished;
     Object.assign(f.style, box(t), { transform: T(0, LAND_RX, LAND_RZ, 1) });
     f.getAnimations().forEach((x) => x.cancel());
@@ -129,9 +155,11 @@ export function initShelf(stage, { featuredId } = {}) {
     f.classList.remove("landed");
     ensureVisible(spine);
     const s = rel(spine), t = rel(slot);
-    const dur = reduce() ? 1 : 1000;
-    const a = f.animate(frames(s, t).reverse().map((k) => ({ ...k, offset: 1 - k.offset })), { duration: dur, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" });
+    const dur = reduce() ? 1 : 1700;
+    const back = frames(s, t).reverse().map((k) => ({ ...k, offset: 1 - k.offset, easing: "cubic-bezier(.45,.05,.3,1)" }));
+    const a = f.animate(back, { duration: dur, fill: "forwards" });
     crossfade(f, dur, false);
+    wobble(spine, dur * 0.82);
     await a.finished;
     f.remove();
     spine.classList.remove("out");
