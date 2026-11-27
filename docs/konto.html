@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Moje konto – Biblioteka SP nr 6</title>
 <meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/">
+    <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
-      <a href="/">Start</a>
-      <a href="/katalog.html">Katalog</a>
-      <a href="/#godziny">Godziny</a>
-      <a href="/#regulamin">Regulamin</a>
-      <a href="/#kontakt">Kontakt</a>
+      <a href="index.html">Start</a>
+      <a href="katalog.html">Katalog</a>
+      <a href="index.html#godziny">Godziny</a>
+      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
   </div>
@@ -47,7 +47,7 @@
           <div>
             <h2 style="font-size:1.3rem">Moje rezerwacje</h2>
             <ul class="res-list" id="mine"></ul>
-            <p class="muted" id="mine-empty" hidden>Nie masz żadnych rezerwacji. <a href="/katalog.html">Przejdź do katalogu</a>.</p>
+            <p class="muted" id="mine-empty" hidden>Nie masz żadnych rezerwacji. <a href="katalog.html">Przejdź do katalogu</a>.</p>
           </div>
         </div>
 
@@ -64,18 +64,18 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="/#kontakt">Kontakt z biblioteką</a>
+    <a href="index.html#kontakt">Kontakt z biblioteką</a>
   </div>
 </footer>
 <script type="module">
-  import { userPromise, api, esc } from "/js/app.js";
+  import { userPromise, myReservations, allReservations, cancelReservation, errorText, esc } from "./js/app.js";
   const $ = id => document.getElementById(id);
   const fmt = d => new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
   const msg = $("msg");
   function show(text, type) { msg.textContent = text; msg.className = "alert " + type; msg.hidden = false; }
 
   const user = await userPromise;
-  if (!user) location.replace("/logowanie.html?next=/konto.html");
+  if (!user) location.replace("logowanie.html?next=konto.html");
   else {
     $("u-name").textContent = user.name;
     $("u-email").textContent = user.email;
@@ -89,34 +89,33 @@
 
   async function loadMine() {
     try {
-      const { reservations } = await api("/api/reservations");
-      $("mine").innerHTML = reservations.map(r => `<li>
+      const list = await myReservations(user);
+      $("mine").innerHTML = list.map(r => `<li>
         <div><strong>${esc(r.title)}</strong><div class="who">${esc(r.author)} · zarezerwowano ${fmt(r.createdAt)}</div></div>
         <button class="btn btn-small btn-ghost" data-cancel="${esc(r.id)}">Anuluj</button></li>`).join("");
-      $("mine-empty").hidden = reservations.length > 0;
-    } catch (e) { show(e.message, "error"); }
+      $("mine-empty").hidden = list.length > 0;
+    } catch (e) { show(errorText(e), "error"); }
   }
   async function loadAll() {
     try {
-      const { reservations } = await api("/api/reservations?all=1");
-      $("all").innerHTML = reservations.map(r => `<li>
+      const list = await allReservations();
+      $("all").innerHTML = list.map(r => `<li>
         <div><strong>${esc(r.title)}</strong><div class="who">${esc(r.userName)}${r.klasa ? " (" + esc(r.klasa) + ")" : ""} · ${fmt(r.createdAt)}</div></div>
-        <button class="btn btn-small" data-cancel="${esc(r.id)}" data-owner="${esc(r.owner)}">Wydano</button></li>`).join("");
-      $("all-empty").hidden = reservations.length > 0;
-    } catch (e) { show(e.message, "error"); }
+        <button class="btn btn-small" data-cancel="${esc(r.id)}" data-issued="1">Wydano</button></li>`).join("");
+      $("all-empty").hidden = list.length > 0;
+    } catch (e) { show(errorText(e), "error"); }
   }
 
   document.addEventListener("click", async e => {
     const btn = e.target.closest("[data-cancel]");
     if (!btn) return;
     btn.disabled = true;
-    const owner = btn.dataset.owner ? `&owner=${encodeURIComponent(btn.dataset.owner)}` : "";
     try {
-      await api(`/api/reservations?id=${encodeURIComponent(btn.dataset.cancel)}${owner}`, { method: "DELETE" });
-      show(owner ? "Rezerwacja oznaczona jako wydana." : "Rezerwacja anulowana.", "ok");
+      await cancelReservation(btn.dataset.cancel);
+      show(btn.dataset.issued ? "Rezerwacja oznaczona jako wydana." : "Rezerwacja anulowana.", "ok");
       await loadMine();
       if (user.role === "bibliotekarz") await loadAll();
-    } catch (err) { show(err.message, "error"); btn.disabled = false; }
+    } catch (err) { show(errorText(err), "error"); btn.disabled = false; }
   });
 </script>
 </body>

@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Katalog – Biblioteka SP nr 6</title>
 <meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/">
+    <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
-      <a href="/">Start</a>
-      <a href="/katalog.html">Katalog</a>
-      <a href="/#godziny">Godziny</a>
-      <a href="/#regulamin">Regulamin</a>
-      <a href="/#kontakt">Kontakt</a>
+      <a href="index.html">Start</a>
+      <a href="katalog.html">Katalog</a>
+      <a href="index.html#godziny">Godziny</a>
+      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
   </div>
@@ -45,13 +45,13 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="/#kontakt">Kontakt z biblioteką</a>
+    <a href="index.html#kontakt">Kontakt z biblioteką</a>
   </div>
 </footer>
 <script type="module">
-  import { userPromise, api } from "/js/app.js";
-  import { BOOKS, CATEGORIES } from "/js/books.js";
-  import { bookCard } from "/js/ui.js";
+  import { userPromise, reserve, myReservations, errorText, MAX_RESERVATIONS } from "./js/app.js";
+  import { BOOKS, CATEGORIES } from "./js/books.js";
+  import { bookCard } from "./js/ui.js";
 
   const q = document.getElementById("q"), cat = document.getElementById("cat");
   const grid = document.getElementById("books"), empty = document.getElementById("empty"), msg = document.getElementById("msg");
@@ -61,7 +61,7 @@
   const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
 
   function action(b) {
-    if (!user) return `<a class="btn btn-small btn-ghost" href="/logowanie.html?next=/katalog.html">Zaloguj, by zarezerwować</a>`;
+    if (!user) return `<a class="btn btn-small btn-ghost" href="logowanie.html?next=katalog.html">Zaloguj, by zarezerwować</a>`;
     if (reserved.has(b.id)) return `<button class="btn btn-small btn-ghost" disabled>Zarezerwowano ✓</button>`;
     return `<button class="btn btn-small" data-reserve="${b.id}">Zarezerwuj</button>`;
   }
@@ -80,18 +80,18 @@
     if (!btn) return;
     btn.disabled = true;
     try {
-      await api("/api/reservations", { method: "POST", body: { bookId: btn.dataset.reserve } });
+      await reserve(user, BOOKS.find(b => b.id === btn.dataset.reserve));
       reserved.add(btn.dataset.reserve);
       show("Książka zarezerwowana! Odbierz ją w bibliotece w ciągu 5 dni roboczych.", "ok");
       render();
-    } catch (err) { show(err.message, "error"); btn.disabled = false; }
+    } catch (err) { show(errorText(err), "error"); btn.disabled = false; }
   });
 
   render();
   user = await userPromise;
   if (user) {
-    document.getElementById("catalog-hint").textContent = `Witaj, ${user.name}! Możesz zarezerwować do 3 książek.`;
-    try { (await api("/api/reservations")).reservations.forEach(r => reserved.add(r.bookId)); } catch {}
+    document.getElementById("catalog-hint").textContent = `Witaj, ${user.name}! Możesz zarezerwować do ${MAX_RESERVATIONS} książek.`;
+    try { (await myReservations(user)).forEach(r => reserved.add(r.bookId)); } catch {}
     render();
   }
 </script>

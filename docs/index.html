@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Biblioteka SP nr 6 im. M. E. Andriollego</title>
 <meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/">
+    <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
-      <a href="/">Start</a>
-      <a href="/katalog.html">Katalog</a>
-      <a href="/#godziny">Godziny</a>
-      <a href="/#regulamin">Regulamin</a>
-      <a href="/#kontakt">Kontakt</a>
+      <a href="index.html">Start</a>
+      <a href="katalog.html">Katalog</a>
+      <a href="index.html#godziny">Godziny</a>
+      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
   </div>
@@ -35,8 +35,8 @@
         <h1>Biblioteka szkolna im.&nbsp;Michała Elwiro Andriollego</h1>
         <p class="lead">Miejsce dla ciekawych świata. Wypożyczaj lektury, odkrywaj nowości, rezerwuj książki online i przychodź na zajęcia czytelnicze.</p>
         <div class="actions">
-          <a href="/katalog.html" class="btn">Przeglądaj katalog</a>
-          <a href="/logowanie.html" class="btn btn-ghost" id="hero-login">Załóż konto czytelnika</a>
+          <a href="katalog.html" class="btn">Przeglądaj katalog</a>
+          <a href="logowanie.html" class="btn btn-ghost" id="hero-login">Załóż konto czytelnika</a>
         </div>
       </div>
       <svg class="hero-art" viewBox="0 0 300 260" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
@@ -67,7 +67,7 @@
     <div class="container">
       <h2>Nowości na półkach</h2>
       <div class="grid" id="new-books" style="margin-top:24px"></div>
-      <p style="margin-top:24px"><a href="/katalog.html" class="btn btn-ghost">Zobacz cały katalog →</a></p>
+      <p style="margin-top:24px"><a href="katalog.html" class="btn btn-ghost">Zobacz cały katalog →</a></p>
     </div>
   </section>
 
@@ -119,7 +119,7 @@
       <div class="card">
         <h3>Masz pytanie o książkę?</h3>
         <p class="muted">Zajrzyj do biblioteki w godzinach otwarcia lub zaloguj się i zarezerwuj ją online – przygotujemy ją dla Ciebie.</p>
-        <a href="/katalog.html" class="btn btn-small">Szukaj w katalogu</a>
+        <a href="katalog.html" class="btn btn-small">Szukaj w katalogu</a>
       </div>
     </div>
   </section>
@@ -127,15 +127,15 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="/#kontakt">Kontakt z biblioteką</a>
+    <a href="index.html#kontakt">Kontakt z biblioteką</a>
   </div>
 </footer>
 <script type="module">
-  import { userPromise } from "/js/app.js";
-  import { BOOKS } from "/js/books.js";
-  import { bookCard } from "/js/ui.js";
+  import { userPromise } from "./js/app.js";
+  import { BOOKS } from "./js/books.js";
+  import { bookCard } from "./js/ui.js";
   document.getElementById("new-books").innerHTML = BOOKS.filter(b => b.isNew).slice(0, 4).map(b => bookCard(b)).join("");
-  userPromise.then(u => { if (u) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "/konto.html"; } });
+  userPromise.then(u => { if (u) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "konto.html"; } });
 </script>
 </body>
 </html>
