@@ -167,8 +167,9 @@ export function initShelf(stage, { featuredId } = {}) {
     if (!reduce()) spine.animate([{ transform: "translateY(-10px)" }, { transform: "translateY(2px)" }, { transform: "none" }], { duration: 300 });
   }
 
+  let pending = null;
   async function choose(spine) {
-    if (busy) return;
+    if (busy) { pending = spine; return; } // zapamiętaj ostatnie kliknięcie na czas animacji
     busy = true;
     try {
       const prev = current;
@@ -181,11 +182,14 @@ export function initShelf(stage, { featuredId } = {}) {
         return;
       }
       await Promise.all([back, takeOut(spine)]);
-    } finally { busy = false; }
+    } finally {
+      busy = false;
+      if (pending) { const p = pending; pending = null; choose(p); }
+    }
   }
 
   shelf.addEventListener("click", (e) => { const sp = e.target.closest(".spine"); if (sp) choose(sp); });
-  info.addEventListener("click", (e) => { if (e.target.closest("[data-putback]") && current) choose(current.spine); });
+  info.addEventListener("click", (e) => { if (e.target.closest("[data-putback]") && current && !busy) choose(current.spine); });
   addEventListener("resize", () => {
     if (current && current.fly.classList.contains("landed")) Object.assign(current.fly.style, box(rel(slot)));
   });
