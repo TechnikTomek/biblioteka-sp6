@@ -1,6 +1,6 @@
 # Biblioteka SP nr 6 im. Michała Elwiro Andriollego
 
-Strona biblioteki szkolnej – w pełni statyczna (folder `docs/`), gotowa do GitHub Pages i Netlify.
+Strona biblioteki szkolnej – w pełni statyczna, gotowa do GitHub Pages i Netlify.
 Nie wymaga serwera ani bazy danych.
 
 **Adres strony:** https://techniktomek.github.io/biblioteka-sp6/
@@ -30,10 +30,10 @@ Na stronie logowania wystarczy kliknąć kafelek konta testowego.
 
 ## Publikacja na GitHub Pages
 1. W repozytorium: **Settings → Pages**.
-2. **Source:** `Deploy from a branch`, **Branch:** `main`, folder **`/docs`** → **Save**.
+2. **Source:** `Deploy from a branch`, **Branch:** `main`, folder **`/ (root)`** → **Save**.
 3. Po 1–2 minutach strona działa pod adresem podanym wyżej. Każdy push na `main` ją aktualizuje.
 
 ## Edycja treści
-- Książki: `docs/js/books.js`
-- Godziny otwarcia i wydarzenia: tablice `HOURS` i `EVENTS` na dole `docs/index.html`
-- Kontakt: `docs/index.html` (sekcja „Kontakt”) i stopka w każdej stronie – wpisz adres, telefon i e-mail.
+- Książki: `js/books.js`
+- Godziny otwarcia i wydarzenia: tablice `HOURS` i `EVENTS` na dole `index.html`
+- Kontakt: `index.html` (sekcja „Kontakt”) i stopka w każdej stronie – wpisz adres, telefon i e-mail.
