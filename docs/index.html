@@ -1,27 +1,34 @@
 <!doctype html>
-<html lang="pl">
+<html lang="pl" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Biblioteka SP nr 6 im. M. E. Andriollego</title>
-<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
+<meta name="theme-color" content="#8b3a14">
+<meta property="og:title" content="Biblioteka SP nr 6 im. M. E. Andriollego">
+<meta property="og:description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">
+<script>try{var t=localStorage.getItem("sp6_theme");if(t)document.documentElement.dataset.theme=JSON.parse(t)}catch(e){}</script>
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
+<div class="progress" aria-hidden="true"></div>
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
-    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Zmień motyw"></button>
+    <button class="icon-btn menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
       <a href="index.html">Start</a>
       <a href="katalog.html">Katalog</a>
+      <a href="index.html#wydarzenia">Wydarzenia</a>
       <a href="index.html#godziny">Godziny</a>
-      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#faq">Pytania</a>
       <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
@@ -29,113 +36,263 @@
 </header>
 <main id="main">
   <section class="hero">
+    <div class="floaters" aria-hidden="true"></div>
     <div class="container hero-grid">
-      <div>
+      <div class="stagger">
         <p class="eyebrow">Szkoła Podstawowa Nr 6</p>
-        <h1>Biblioteka szkolna im.&nbsp;Michała Elwiro Andriollego</h1>
-        <p class="lead">Miejsce dla ciekawych świata. Wypożyczaj lektury, odkrywaj nowości, rezerwuj książki online i przychodź na zajęcia czytelnicze.</p>
+        <h1>Biblioteka szkolna im.&nbsp;<span class="hl">Michała Elwiro Andriollego</span></h1>
+        <p class="lead">Miejsce dla ciekawych świata. Wypożyczaj lektury, odkrywaj nowości, rezerwuj książki online i przychodź na nasze wydarzenia.</p>
         <div class="actions">
-          <a href="katalog.html" class="btn">Przeglądaj katalog</a>
-          <a href="logowanie.html" class="btn btn-ghost" id="hero-login">Załóż konto czytelnika</a>
+          <a href="katalog.html" class="btn">Przeglądaj katalog →</a>
+          <a href="logowanie.html" class="btn btn-ghost" id="hero-login">Zaloguj się</a>
         </div>
       </div>
-      <svg class="hero-art" viewBox="0 0 300 260" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-        <path d="M30 70c40-18 80-14 120 10 40-24 80-28 120-10v150c-40-18-80-14-120 10-40-24-80-28-120-10z" fill="color-mix(in srgb, currentColor 8%, transparent)"/>
-        <path d="M150 80v150"/>
-        <path d="M55 100c25-8 50-6 75 4M55 125c25-8 50-6 75 4M55 150c25-8 50-6 75 4M55 175c25-8 50-6 75 4" opacity=".55"/>
-        <path d="M170 104c25-10 50-12 75-4M170 129c25-10 50-12 75-4M170 154c25-10 50-12 75-4M170 179c25-10 50-12 75-4" opacity=".55"/>
-        <path d="M210 30c0 18 10 26 22 30-12 4-22 12-22 30 0-18-10-26-22-30 12-4 22-12 22-30z" fill="currentColor" stroke="none" opacity=".8"/>
-        <path d="M95 20c0 10 6 15 12 17-6 2-12 7-12 17 0-10-6-15-12-17 6-2 12-7 12-17z" fill="currentColor" stroke="none" opacity=".5"/>
+      <svg class="hero-art" viewBox="0 0 300 280" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+        <g class="book">
+          <path d="M30 80c40-18 80-14 120 10 40-24 80-28 120-10v150c-40-18-80-14-120 10-40-24-80-28-120-10z" fill="color-mix(in srgb, currentColor 9%, transparent)"/>
+          <path d="M150 90v150"/>
+          <path class="page-l" d="M55 110c25-8 50-6 75 4M55 135c25-8 50-6 75 4M55 160c25-8 50-6 75 4M55 185c25-8 50-6 75 4" opacity=".55"/>
+          <path class="page-r" d="M170 114c25-10 50-12 75-4M170 139c25-10 50-12 75-4M170 164c25-10 50-12 75-4M170 189c25-10 50-12 75-4" opacity=".55"/>
+          <path class="bookmark" d="M222 74v58l10-9 10 9V70" fill="currentColor" stroke="none" opacity=".85"/>
+        </g>
+        <path class="spark" d="M210 20c0 18 10 26 22 30-12 4-22 12-22 30 0-18-10-26-22-30 12-4 22-12 22-30z" fill="currentColor" stroke="none" opacity=".8"/>
+        <path class="spark" d="M80 22c0 10 6 15 12 17-6 2-12 7-12 17 0-10-6-15-12-17 6-2 12-7 12-17z" fill="currentColor" stroke="none" opacity=".55"/>
+        <path class="spark" d="M276 150c0 7 4 10 8 12-4 1-8 5-8 12 0-7-4-11-8-12 4-2 8-5 8-12z" fill="currentColor" stroke="none" opacity=".5"/>
       </svg>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat reveal" style="--d:0s"><strong data-count="0" id="st-titles">0</strong><span>tytułów w katalogu</span></div>
+      <div class="stat reveal" style="--d:.08s"><strong data-count="0" id="st-copies">0</strong><span>egzemplarzy na półkach</span></div>
+      <div class="stat reveal" style="--d:.16s"><strong data-count="0" id="st-hours" data-suffix=" h">0</strong><span>otwarcia w tygodniu</span></div>
+      <div class="stat reveal" style="--d:.24s"><strong data-count="0" id="st-avail">0</strong><span>książek wolnych teraz</span></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Oferta</p>
+        <h2>Co znajdziesz w bibliotece</h2>
+        <p class="muted">Biblioteka służy uczniom, nauczycielom i rodzicom naszej szkoły.</p>
+      </div>
+      <div class="grid">
+        <div class="card lift reveal" style="--d:0s"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5 2.5 2.5 0 0 0 6.5 24"/><path d="M8 7h7M8 11h5"/></svg></div><h3>Wypożyczenia</h3><p class="muted">Lektury dla wszystkich klas, literatura młodzieżowa, popularnonaukowa i komiksy.</p></div>
+        <div class="card lift reveal" style="--d:.08s"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div><h3>Rezerwacje online</h3><p class="muted">Zarezerwuj do 3 książek przez internet i odbierz je w ciągu 5 dni roboczych.</p></div>
+        <div class="card lift reveal" style="--d:.16s"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><h3>Czytelnia</h3><p class="muted">Ciche miejsce do nauki, odrabiania lekcji i korzystania z encyklopedii.</p></div>
+        <div class="card lift reveal" style="--d:.24s"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8z"/></svg></div><h3>Wydarzenia</h3><p class="muted">Konkursy czytelnicze, lekcje biblioteczne, spotkania z autorami i Narodowe Czytanie.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt" id="polecamy">
+    <div class="container two-col">
+      <div class="reveal left" id="week-cover" style="max-width:300px;justify-self:center;width:100%"></div>
+      <div class="reveal right">
+        <p class="eyebrow">Książka tygodnia</p>
+        <h2 id="week-title"></h2>
+        <p class="muted" id="week-author"></p>
+        <p id="week-desc"></p>
+        <div class="actions" style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn" id="week-more" type="button">Szczegóły i rezerwacja</button>
+          <a class="btn btn-ghost" href="katalog.html">Więcej książek</a>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="block">
     <div class="container">
-      <h2>Co oferujemy</h2>
-      <p class="muted">Biblioteka służy uczniom, nauczycielom i rodzicom naszej szkoły.</p>
-      <div class="grid" style="margin-top:24px">
-        <div class="card"><h3>📚 Wypożyczenia</h3><p class="muted">Lektury dla wszystkich klas, literatura młodzieżowa, popularnonaukowa i komiksy.</p></div>
-        <div class="card"><h3>🔖 Rezerwacje online</h3><p class="muted">Po zalogowaniu zarezerwujesz do 3 książek – odbierzesz je w bibliotece.</p></div>
-        <div class="card"><h3>💻 Czytelnia</h3><p class="muted">Ciche miejsce do nauki, komputery z dostępem do internetu i encyklopedie.</p></div>
-        <div class="card"><h3>🎭 Wydarzenia</h3><p class="muted">Konkursy czytelnicze, spotkania z autorami, Narodowe Czytanie i lekcje biblioteczne.</p></div>
+      <div class="section-head reveal">
+        <p class="eyebrow">Świeżo na półkach</p>
+        <h2>Nowości</h2>
       </div>
+      <div class="grid" id="new-books"></div>
     </div>
   </section>
 
-  <section class="block alt">
-    <div class="container">
-      <h2>Nowości na półkach</h2>
-      <div class="grid" id="new-books" style="margin-top:24px"></div>
-      <p style="margin-top:24px"><a href="katalog.html" class="btn btn-ghost">Zobacz cały katalog →</a></p>
+  <section class="block alt" id="wydarzenia">
+    <div class="container two-col">
+      <div class="reveal">
+        <p class="eyebrow">Kalendarz</p>
+        <h2>Wydarzenia w bibliotece</h2>
+        <p class="muted">Zapraszamy wszystkich uczniów! Szczegóły u bibliotekarza i na tablicy ogłoszeń.</p>
+        <blockquote style="margin-top:24px">„Książka to przyjaciel, który nigdy nie zawodzi.”<footer>– motto naszej biblioteki</footer></blockquote>
+      </div>
+      <ol class="timeline" id="events"></ol>
     </div>
   </section>
 
   <section class="block" id="godziny">
     <div class="container two-col">
-      <div>
+      <div class="reveal left">
+        <p class="eyebrow">Zapraszamy</p>
         <h2>Godziny otwarcia</h2>
-        <table class="hours">
-          <tr><td>Poniedziałek</td><td>7:45 – 15:00</td></tr>
-          <tr><td>Wtorek</td><td>7:45 – 15:00</td></tr>
-          <tr><td>Środa</td><td>8:00 – 16:00</td></tr>
-          <tr><td>Czwartek</td><td>7:45 – 15:00</td></tr>
-          <tr><td>Piątek</td><td>7:45 – 13:30</td></tr>
-        </table>
-        <p class="muted" style="margin-top:12px">W ostatnim tygodniu przed końcem roku szkolnego biblioteka przyjmuje tylko zwroty.</p>
+        <div id="open-status" class="status-pill"></div>
+        <table class="hours" id="hours"></table>
+        <p class="muted" style="margin-top:12px;font-size:.92rem">W ostatnim tygodniu przed końcem roku szkolnego biblioteka przyjmuje tylko zwroty.</p>
       </div>
-      <div>
-        <h2>Nasz patron</h2>
-        <p><strong>Michał Elwiro Andriolli</strong> (1836–1893) – malarz, rysownik i jeden z najwybitniejszych polskich ilustratorów XIX wieku. Stworzył słynne ilustracje do <em>Pana Tadeusza</em>, utworów Elizy Orzeszkowej, Józefa Ignacego Kraszewskiego i Juliusza Słowackiego.</p>
+      <div class="reveal right">
+        <p class="eyebrow">Patron</p>
+        <h2>Michał Elwiro Andriolli</h2>
+        <p><strong>Michał Elwiro Andriolli</strong> (1836–1893) – malarz, rysownik i jeden z najwybitniejszych polskich ilustratorów XIX wieku. Stworzył słynne ilustracje do <em>Pana Tadeusza</em> oraz utworów Elizy Orzeszkowej, Józefa Ignacego Kraszewskiego i Juliusza Słowackiego.</p>
         <p>Uważany jest za twórcę charakterystycznej drewnianej architektury letniskowej, nazywanej stylem <em>świdermajer</em>.</p>
-        <blockquote>„Książka to przyjaciel, który nigdy nie zawodzi.”</blockquote>
+        <a class="btn btn-ghost btn-small" href="#" data-open-book="b01">Zobacz „Pana Tadeusza” w katalogu</a>
       </div>
     </div>
   </section>
 
   <section class="block alt" id="regulamin">
-    <div class="container">
-      <h2>Regulamin w skrócie</h2>
-      <ol class="rules">
-        <li>Z biblioteki mogą korzystać uczniowie, nauczyciele i pracownicy szkoły oraz rodzice uczniów.</li>
-        <li>Jednorazowo można wypożyczyć do 3 książek na okres 2 tygodni (lektury – na 3 tygodnie).</li>
-        <li>Termin zwrotu można przedłużyć, jeśli na książkę nie czeka inny czytelnik.</li>
-        <li>Rezerwacja online jest ważna 5 dni roboczych – po tym czasie książka wraca na półkę.</li>
-        <li>Czytelnik dba o wypożyczone książki. Zgubioną lub zniszczoną książkę należy odkupić lub zastąpić inną, wskazaną przez bibliotekarza.</li>
-        <li>Przed końcem roku szkolnego wszystkie książki należy zwrócić do biblioteki.</li>
-      </ol>
+    <div class="container two-col">
+      <div class="reveal">
+        <p class="eyebrow">Zasady</p>
+        <h2>Regulamin w skrócie</h2>
+        <p class="muted">Kilka prostych zasad, dzięki którym książki służą wszystkim jak najdłużej.</p>
+      </div>
+      <div class="accordion reveal" style="--d:.1s">
+        <details open><summary>Kto może korzystać z biblioteki?</summary><div class="content">Uczniowie, nauczyciele i pracownicy szkoły oraz rodzice uczniów.</div></details>
+        <details><summary>Ile książek i na jak długo?</summary><div class="content">Jednorazowo do 3 książek na 2 tygodnie (lektury – na 3 tygodnie). Termin można przedłużyć, jeśli nikt inny nie czeka na książkę.</div></details>
+        <details><summary>Jak działa rezerwacja online?</summary><div class="content">Po zalogowaniu kliknij „Zarezerwuj” w katalogu. Rezerwacja jest ważna 5 dni roboczych – po tym czasie książka wraca na półkę.</div></details>
+        <details><summary>Co jeśli zgubię lub zniszczę książkę?</summary><div class="content">Należy ją odkupić lub zastąpić inną, wskazaną przez bibliotekarza.</div></details>
+        <details><summary>Kiedy trzeba oddać książki?</summary><div class="content">Wszystkie książki należy zwrócić przed końcem roku szkolnego.</div></details>
+      </div>
     </div>
   </section>
 
-  <section class="block" id="kontakt">
-    <div class="container two-col">
-      <div>
-        <h2>Kontakt</h2>
-        <p><strong>Biblioteka Szkoły Podstawowej Nr 6<br>im. Michała Elwiro Andriollego</strong></p>
-        <p class="muted">Adres: <span>[uzupełnij adres szkoły]</span><br>
-          Telefon: <span>[uzupełnij numer]</span><br>
-          E-mail: <span>[uzupełnij e-mail biblioteki]</span></p>
+  <section class="block" id="faq">
+    <div class="container">
+      <div class="section-head center center reveal">
+        <p class="eyebrow">FAQ</p>
+        <h2>Najczęstsze pytania</h2>
       </div>
-      <div class="card">
+      <div class="grid">
+        <div class="card lift reveal" style="--d:0s"><h3>Jak założyć konto?</h3><p class="muted">Kliknij „Zaloguj się” → „Rejestracja”. Możesz też wypróbować gotowe konto testowe.</p></div>
+        <div class="card lift reveal" style="--d:.08s"><h3>Nie ma książki, której szukam</h3><p class="muted">Zapytaj bibliotekarza – zapiszemy propozycję do kolejnych zakupów.</p></div>
+        <div class="card lift reveal" style="--d:.16s"><h3>Czy mogę czytać na miejscu?</h3><p class="muted">Tak! Czytelnia jest otwarta w godzinach pracy biblioteki.</p></div>
+        <div class="card lift reveal" style="--d:.24s"><h3>Jak anulować rezerwację?</h3><p class="muted">Wejdź w „Moje konto” i kliknij „Anuluj” przy wybranej książce.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt" id="kontakt">
+    <div class="container two-col">
+      <div class="reveal left">
+        <p class="eyebrow">Kontakt</p>
+        <h2>Odwiedź nas</h2>
+        <p><strong>Biblioteka Szkoły Podstawowej Nr 6<br>im. Michała Elwiro Andriollego</strong></p>
+        <p class="muted">Adres: [uzupełnij adres szkoły]<br>Telefon: [uzupełnij numer]<br>E-mail: [uzupełnij e-mail biblioteki]</p>
+      </div>
+      <div class="card reveal right">
         <h3>Masz pytanie o książkę?</h3>
-        <p class="muted">Zajrzyj do biblioteki w godzinach otwarcia lub zaloguj się i zarezerwuj ją online – przygotujemy ją dla Ciebie.</p>
+        <p class="muted">Zajrzyj do biblioteki w godzinach otwarcia lub zarezerwuj książkę online – przygotujemy ją dla Ciebie.</p>
         <a href="katalog.html" class="btn btn-small">Szukaj w katalogu</a>
       </div>
     </div>
   </section>
 </main>
 <footer class="site-footer">
-  <div class="container footer-inner">
-    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="index.html#kontakt">Kontakt z biblioteką</a>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Biblioteka SP nr 6</h4>
+        <p>Szkoła Podstawowa Nr 6 im. Michała Elwiro Andriollego.<br>Czytamy, odkrywamy, rozmawiamy o książkach.</p>
+      </div>
+      <div>
+        <h4>Na skróty</h4>
+        <ul><li><a href="katalog.html">Katalog książek</a></li><li><a href="index.html#godziny">Godziny otwarcia</a></li><li><a href="index.html#regulamin">Regulamin</a></li><li><a href="konto.html">Moje konto</a></li></ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul><li>[uzupełnij adres szkoły]</li><li>tel. [uzupełnij]</li><li>[uzupełnij e-mail]</li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+      <a href="#main">Do góry ↑</a>
+    </div>
   </div>
 </footer>
+<button class="to-top" type="button" aria-label="Przewiń do góry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script type="module">
-  import { userPromise } from "./js/app.js";
-  import { BOOKS } from "./js/books.js";
-  import { bookCard } from "./js/ui.js";
-  document.getElementById("new-books").innerHTML = BOOKS.filter(b => b.isNew).slice(0, 4).map(b => bookCard(b)).join("");
-  userPromise.then(u => { if (u) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "konto.html"; } });
+import { userPromise, available, observeReveal, countUp, esc, fmtShort } from "./js/app.js";
+import { BOOKS } from "./js/books.js";
+import { bookCard, cover, wireBooks, makeCtx } from "./js/ui.js";
+
+// Godziny otwarcia: [dzień tygodnia (1=pon), od, do]
+const HOURS = [[1, "7:45", "15:00"], [2, "7:45", "15:00"], [3, "8:00", "16:00"], [4, "7:45", "15:00"], [5, "7:45", "13:30"]];
+const DAYS = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
+// Wydarzenia – edytuj daty i opisy
+const EVENTS = [
+  ["2026-11-25", "Dzień Pluszowego Misia", "Przynieś swojego misia i posłuchaj opowieści o Kubusiu Puchatku."],
+  ["2026-12-04", "Mikołajki z książką", "Kiermasz używanych książek i świąteczne czytanie dla klas 1–3."],
+  ["2027-02-14", "Międzynarodowy Dzień Darowania Książki", "Podaruj książkę bibliotece lub koledze – zbieramy dary przez cały tydzień."],
+  ["2027-03-21", "Światowy Dzień Poezji", "Konkurs recytatorski i wspólne pisanie wierszy."],
+  ["2027-04-23", "Światowy Dzień Książki", "Gra terenowa po bibliotece i finał konkursu „Czytelnik Roku”."],
+];
+
+const mins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const now = new Date(), today = now.getDay(), nowMin = now.getHours() * 60 + now.getMinutes();
+document.getElementById("hours").innerHTML = HOURS.map(([d, a, b]) =>
+  `<tr class="${d === today ? "today" : ""}"><td>${DAYS[d]}${d === today ? " · dziś" : ""}</td><td>${a} – ${b}</td></tr>`).join("") +
+  `<tr><td>Sobota – niedziela</td><td>nieczynne</td></tr>`;
+const h = HOURS.find(([d]) => d === today), st = document.getElementById("open-status");
+const isOpen = h && nowMin >= mins(h[1]) && nowMin < mins(h[2]);
+st.className = "status-pill " + (isOpen ? "open" : "closed");
+st.textContent = isOpen ? `Teraz otwarte · do ${h[2]}` : (h && nowMin < mins(h[1]) ? `Dziś otwieramy o ${h[1]}` : "Teraz zamknięte");
+
+const weekly = HOURS.reduce((s, [, a, b]) => s + (mins(b) - mins(a)), 0) / 60;
+const setCount = (id, n) => { const el = document.getElementById(id); el.dataset.count = Math.round(n); };
+setCount("st-titles", BOOKS.length);
+setCount("st-copies", BOOKS.reduce((s, b) => s + b.copies, 0));
+setCount("st-hours", weekly);
+await userPromise; // dane testowe muszą być wczytane przed liczeniem wolnych egzemplarzy
+setCount("st-avail", BOOKS.reduce((s, b) => s + available(b), 0));
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { countUp(e.target); io.unobserve(e.target); } }), { threshold: .6 });
+document.querySelectorAll("[data-count]").forEach((el) => io.observe(el));
+
+const todayIso = now.toISOString().slice(0, 10);
+document.getElementById("events").innerHTML = EVENTS.map(([d, t, p], i) => {
+  const dt = new Date(d + "T12:00:00");
+  return `<li class="reveal ${d < todayIso ? "past" : ""}" style="--d:${i * .08}s"><div class="date-badge"><b>${dt.getDate()}</b><small>${dt.toLocaleDateString("pl-PL", { month: "short" })}</small></div>
+    <div><h3>${esc(t)}</h3><p>${esc(p)}${d < todayIso ? " <em>(już było)</em>" : ""}</p></div></li>`;
+}).join("");
+
+// Książka tygodnia – zmienia się co tydzień
+const week = Math.floor((Date.now() / 864e5 + 3) / 7);
+const pick = BOOKS[week % BOOKS.length];
+document.getElementById("week-cover").innerHTML = `<div class="cover-wrap" data-open="${pick.id}" role="button" tabindex="0">${cover(pick)}</div>`;
+document.getElementById("week-title").textContent = pick.title;
+document.getElementById("week-author").textContent = `${pick.author} · ${pick.year}`;
+document.getElementById("week-desc").textContent = pick.desc;
+
+const user = await userPromise;
+const ctx = makeCtx(user);
+const grid = document.getElementById("new-books");
+const render = () => { grid.innerHTML = BOOKS.filter((b) => b.isNew).slice(0, 4).map((b, i) => bookCard(b, ctx, i)).join(""); observeReveal(grid); };
+render();
+const { open } = wireBooks(document.getElementById("main"), ctx, render);
+document.getElementById("week-more").addEventListener("click", () => open(pick.id));
+document.querySelector("[data-open-book]").addEventListener("click", (e) => { e.preventDefault(); open("b01"); });
+observeReveal();
+
+if (user) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "konto.html"; }
+
+// Unoszące się litery w tle
+const fl = document.querySelector(".floaters");
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const chars = ["A", "ą", "ś", "Ż", "✦", "❦", "§", "ę", "Ł", "&"];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement("span");
+    s.textContent = chars[i % chars.length];
+    s.style.left = Math.random() * 100 + "%";
+    s.style.fontSize = 0.9 + Math.random() * 1.4 + "rem";
+    s.style.animationDuration = 14 + Math.random() * 16 + "s";
+    s.style.animationDelay = -Math.random() * 25 + "s";
+    fl.append(s);
+  }
+}
 </script>
 </body>
 </html>

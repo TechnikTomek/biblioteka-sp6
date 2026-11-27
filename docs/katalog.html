@@ -1,99 +1,165 @@
 <!doctype html>
-<html lang="pl">
+<html lang="pl" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Katalog – Biblioteka SP nr 6</title>
-<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
+<meta name="theme-color" content="#8b3a14">
+<meta property="og:title" content="Katalog – Biblioteka SP nr 6">
+<meta property="og:description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">
+<script>try{var t=localStorage.getItem("sp6_theme");if(t)document.documentElement.dataset.theme=JSON.parse(t)}catch(e){}</script>
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
+<div class="progress" aria-hidden="true"></div>
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
-    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Zmień motyw"></button>
+    <button class="icon-btn menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
       <a href="index.html">Start</a>
       <a href="katalog.html">Katalog</a>
+      <a href="index.html#wydarzenia">Wydarzenia</a>
       <a href="index.html#godziny">Godziny</a>
-      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#faq">Pytania</a>
       <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
   </div>
 </header>
 <main id="main">
-  <section class="block">
+  <section class="block" style="padding-top:clamp(36px,6vw,64px)">
     <div class="container">
-      <h1>Katalog książek</h1>
-      <p class="muted" id="catalog-hint">Zaloguj się, aby rezerwować książki online.</p>
-      <div id="msg" class="alert" hidden role="status"></div>
+      <div class="section-head stagger">
+        <p class="eyebrow">Katalog</p>
+        <h1>Znajdź swoją książkę</h1>
+        <p class="muted" id="catalog-hint">Kliknij okładkę, aby zobaczyć opis. Zaloguj się, aby rezerwować i dodawać do ulubionych.</p>
+      </div>
       <div class="toolbar">
-        <input type="search" id="q" placeholder="Szukaj po tytule lub autorze…" aria-label="Szukaj">
-        <select id="cat" aria-label="Kategoria"><option value="">Wszystkie kategorie</option></select>
+        <input type="search" id="q" placeholder="Szukaj po tytule lub autorze…  (skrót: /)" aria-label="Szukaj">
+        <select id="sort" aria-label="Sortowanie">
+          <option value="title">Tytuł A–Z</option>
+          <option value="author">Autor A–Z</option>
+          <option value="new">Najnowsze wydania</option>
+          <option value="old">Najstarsze wydania</option>
+          <option value="avail">Najwięcej wolnych</option>
+        </select>
+        <button class="btn btn-ghost btn-small" id="random" type="button">🎲 Wylosuj</button>
+      </div>
+      <div class="toolbar-2">
+        <div class="chips" id="chips" role="group" aria-label="Kategorie"></div>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <label class="check"><input type="checkbox" id="only-avail"> Tylko dostępne</label>
+          <label class="check" id="only-fav-wrap" hidden><input type="checkbox" id="only-fav"> Ulubione</label>
+          <span class="count" id="count" aria-live="polite"></span>
+        </div>
       </div>
       <div class="grid" id="books"></div>
-      <p class="empty" id="empty" hidden>Nie znaleziono książek pasujących do wyszukiwania.</p>
+      <div class="empty" id="empty" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <p>Nie znaleziono książek pasujących do wyszukiwania.</p>
+        <button class="btn btn-small btn-ghost" id="clear" type="button">Wyczyść filtry</button>
+      </div>
     </div>
   </section>
 </main>
 <footer class="site-footer">
-  <div class="container footer-inner">
-    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="index.html#kontakt">Kontakt z biblioteką</a>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Biblioteka SP nr 6</h4>
+        <p>Szkoła Podstawowa Nr 6 im. Michała Elwiro Andriollego.<br>Czytamy, odkrywamy, rozmawiamy o książkach.</p>
+      </div>
+      <div>
+        <h4>Na skróty</h4>
+        <ul><li><a href="katalog.html">Katalog książek</a></li><li><a href="index.html#godziny">Godziny otwarcia</a></li><li><a href="index.html#regulamin">Regulamin</a></li><li><a href="konto.html">Moje konto</a></li></ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul><li>[uzupełnij adres szkoły]</li><li>tel. [uzupełnij]</li><li>[uzupełnij e-mail]</li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+      <a href="#main">Do góry ↑</a>
+    </div>
   </div>
 </footer>
+<button class="to-top" type="button" aria-label="Przewiń do góry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script type="module">
-  import { userPromise, reserve, myReservations, errorText, MAX_RESERVATIONS } from "./js/app.js";
-  import { BOOKS, CATEGORIES } from "./js/books.js";
-  import { bookCard } from "./js/ui.js";
+import { userPromise, available, observeReveal, MAX_RESERVATIONS } from "./js/app.js";
+import { BOOKS, CATEGORIES } from "./js/books.js";
+import { bookCard, wireBooks, makeCtx } from "./js/ui.js";
 
-  const q = document.getElementById("q"), cat = document.getElementById("cat");
-  const grid = document.getElementById("books"), empty = document.getElementById("empty"), msg = document.getElementById("msg");
-  for (const [k, v] of Object.entries(CATEGORIES)) cat.add(new Option(v, k));
+const $ = (id) => document.getElementById(id);
+const q = $("q"), sort = $("sort"), grid = $("books"), empty = $("empty"), count = $("count");
+const onlyAvail = $("only-avail"), onlyFav = $("only-fav");
+let cat = new URLSearchParams(location.search).get("kategoria") || "";
 
-  let user = null, reserved = new Set();
-  const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
-
-  function action(b) {
-    if (!user) return `<a class="btn btn-small btn-ghost" href="logowanie.html?next=katalog.html">Zaloguj, by zarezerwować</a>`;
-    if (reserved.has(b.id)) return `<button class="btn btn-small btn-ghost" disabled>Zarezerwowano ✓</button>`;
-    return `<button class="btn btn-small" data-reserve="${b.id}">Zarezerwuj</button>`;
-  }
-  function render() {
-    const term = norm(q.value.trim());
-    const list = BOOKS.filter(b => (!cat.value || b.category === cat.value) && (!term || norm(b.title + " " + b.author).includes(term)));
-    grid.innerHTML = list.map(b => bookCard(b, action(b))).join("");
-    empty.hidden = list.length > 0;
-  }
-  function show(text, type) { msg.textContent = text; msg.className = "alert " + type; msg.hidden = false; }
-
-  q.addEventListener("input", render);
-  cat.addEventListener("change", render);
-  grid.addEventListener("click", async e => {
-    const btn = e.target.closest("[data-reserve]");
-    if (!btn) return;
-    btn.disabled = true;
-    try {
-      await reserve(user, BOOKS.find(b => b.id === btn.dataset.reserve));
-      reserved.add(btn.dataset.reserve);
-      show("Książka zarezerwowana! Odbierz ją w bibliotece w ciągu 5 dni roboczych.", "ok");
-      render();
-    } catch (err) { show(errorText(err), "error"); btn.disabled = false; }
-  });
-
+$("chips").innerHTML = [["", "Wszystkie"], ...Object.entries(CATEGORIES)].map(([k, v]) =>
+  `<button class="chip" data-cat="${k}" aria-pressed="${k === cat}">${v}</button>`).join("");
+$("chips").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-cat]"); if (!c) return;
+  cat = c.dataset.cat;
+  document.querySelectorAll("[data-cat]").forEach((el) => el.setAttribute("aria-pressed", String(el.dataset.cat === cat)));
   render();
-  user = await userPromise;
-  if (user) {
-    document.getElementById("catalog-hint").textContent = `Witaj, ${user.name}! Możesz zarezerwować do ${MAX_RESERVATIONS} książek.`;
-    try { (await myReservations(user)).forEach(r => reserved.add(r.bookId)); } catch {}
-    render();
-  }
+});
+
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+const SORTS = {
+  title: (a, b) => a.title.localeCompare(b.title, "pl"),
+  author: (a, b) => a.author.split(" ").pop().localeCompare(b.author.split(" ").pop(), "pl"),
+  new: (a, b) => b.year - a.year,
+  old: (a, b) => a.year - b.year,
+  avail: (a, b) => available(b) - available(a),
+};
+
+let ctx = makeCtx(null);
+function render() {
+  const term = norm(q.value.trim());
+  const list = BOOKS.filter((b) =>
+    (!cat || b.category === cat) &&
+    (!term || norm(b.title + " " + b.author).includes(term)) &&
+    (!onlyAvail.checked || available(b) > 0) &&
+    (!onlyFav.checked || ctx.favs.has(b.id))
+  ).sort(SORTS[sort.value]);
+  grid.innerHTML = list.map((b, i) => bookCard(b, ctx, i)).join("");
+  empty.hidden = list.length > 0;
+  count.textContent = `${list.length} z ${BOOKS.length}`;
+  observeReveal(grid);
+}
+
+let t; q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(render, 120); });
+for (const el of [sort, onlyAvail, onlyFav]) el.addEventListener("change", render);
+$("clear").addEventListener("click", () => {
+  q.value = ""; cat = ""; onlyAvail.checked = false; onlyFav.checked = false;
+  document.querySelectorAll("[data-cat]").forEach((el) => el.setAttribute("aria-pressed", String(el.dataset.cat === "")));
+  render();
+});
+addEventListener("keydown", (e) => { if (e.key === "/" && document.activeElement !== q && !e.target.closest("input,textarea")) { e.preventDefault(); q.focus(); } });
+
+render();
+const user = await userPromise;
+ctx = makeCtx(user);
+const { open } = wireBooks(grid, ctx, render);
+$("random").addEventListener("click", () => {
+  const pool = BOOKS.filter((b) => available(b) > 0);
+  open(pool[Math.floor(Math.random() * pool.length)].id);
+});
+if (user) {
+  $("catalog-hint").textContent = `Witaj, ${user.name.split(" ")[0]}! Możesz mieć do ${MAX_RESERVATIONS} rezerwacji naraz. Kliknij ♡, aby dodać do ulubionych.`;
+  $("only-fav-wrap").hidden = false;
+}
+render();
+const deep = new URLSearchParams(location.search).get("ksiazka");
+if (deep) open(deep);
 </script>
 </body>
 </html>

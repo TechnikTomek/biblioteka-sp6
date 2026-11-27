@@ -1,122 +1,213 @@
 <!doctype html>
-<html lang="pl">
+<html lang="pl" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Moje konto – Biblioteka SP nr 6</title>
-<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog, rezerwacje, godziny otwarcia.">
+<meta name="description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
+<meta name="theme-color" content="#8b3a14">
+<meta property="og:title" content="Moje konto – Biblioteka SP nr 6">
+<meta property="og:description" content="Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego – katalog książek, rezerwacje online, godziny otwarcia i wydarzenia.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">
+<script>try{var t=localStorage.getItem("sp6_theme");if(t)document.documentElement.dataset.theme=JSON.parse(t)}catch(e){}</script>
 </head>
 <body>
 <a class="skip" href="#main">Przejdź do treści</a>
+<div class="progress" aria-hidden="true"></div>
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="index.html">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#8b3a14"/><path d="M10 14c5-2 10-1 14 2 4-3 9-4 14-2v21c-5-2-10-1-14 2-4-3-9-4-14-2z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 16v21" stroke="#fff" stroke-width="2.2"/></svg>
       <span class="brand-text"><strong>Biblioteka SP nr 6</strong><span>im. Michała Elwiro Andriollego</span></span>
     </a>
-    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Zmień motyw"></button>
+    <button class="icon-btn menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="site-nav" id="site-nav" aria-label="Główna nawigacja">
       <a href="index.html">Start</a>
       <a href="katalog.html">Katalog</a>
+      <a href="index.html#wydarzenia">Wydarzenia</a>
       <a href="index.html#godziny">Godziny</a>
-      <a href="index.html#regulamin">Regulamin</a>
+      <a href="index.html#faq">Pytania</a>
       <a href="index.html#kontakt">Kontakt</a>
       <div id="nav-auth"></div>
     </nav>
   </div>
 </header>
 <main id="main">
-  <section class="block">
+  <section class="block" style="padding-top:clamp(36px,6vw,64px)">
     <div class="container">
       <p id="loading" class="muted">Wczytywanie…</p>
       <div id="account" hidden>
-        <h1>Cześć, <span id="u-name"></span>!</h1>
-        <div id="msg" class="alert" hidden role="status"></div>
-        <div class="two-col" style="margin-top:24px">
-          <div class="card profile">
-            <h2 style="font-size:1.3rem">Twój profil</h2>
+        <div class="account-head">
+          <div class="big-avatar" id="u-initials"></div>
+          <div><p class="eyebrow" style="margin:0" id="u-role-eyebrow"></p><h1>Cześć, <span id="u-first"></span>!</h1></div>
+        </div>
+        <div class="account-grid">
+          <aside class="card profile reveal left">
+            <h2 style="font-size:1.25rem">Twój profil</h2>
             <dl>
+              <dt>Imię</dt><dd id="u-name"></dd>
               <dt>E-mail</dt><dd id="u-email"></dd>
               <dt>Klasa</dt><dd id="u-klasa"></dd>
-              <dt>Rola</dt><dd id="u-role"></dd>
               <dt>Konto od</dt><dd id="u-created"></dd>
             </dl>
-          </div>
+            <div style="font-size:.9rem"><strong>Limit rezerwacji</strong> <span class="muted" id="limit-text"></span></div>
+            <div class="meter"><i id="limit-bar"></i></div>
+            <a href="katalog.html" class="btn btn-small btn-block" style="margin-top:16px">Szukaj książek</a>
+            <button class="btn btn-small btn-ghost btn-block" id="reset" type="button" style="margin-top:8px">Przywróć dane testowe</button>
+          </aside>
           <div>
-            <h2 style="font-size:1.3rem">Moje rezerwacje</h2>
-            <ul class="res-list" id="mine"></ul>
-            <p class="muted" id="mine-empty" hidden>Nie masz żadnych rezerwacji. <a href="katalog.html">Przejdź do katalogu</a>.</p>
+            <section class="panel reveal">
+              <h2>Moje rezerwacje <span class="badge-count" id="mine-count">0</span></h2>
+              <ul class="res-list" id="mine"></ul>
+              <p class="muted" id="mine-empty" hidden>Nie masz żadnych rezerwacji. <a href="katalog.html">Przejdź do katalogu</a>.</p>
+            </section>
+            <section class="panel reveal" style="--d:.1s">
+              <h2>Ulubione <span class="badge-count" id="fav-count">0</span></h2>
+              <ul class="res-list" id="favs"></ul>
+              <p class="muted" id="fav-empty" hidden>Kliknij ♡ przy książce w katalogu, aby dodać ją tutaj.</p>
+            </section>
           </div>
         </div>
 
-        <section id="librarian" hidden style="margin-top:48px">
-          <h2>Panel bibliotekarza – wszystkie rezerwacje</h2>
-          <p class="muted">Po wydaniu książki kliknij „Wydano”, aby usunąć rezerwację z listy.</p>
+        <section id="librarian" class="panel reveal" hidden style="margin-top:56px">
+          <p class="eyebrow">Panel bibliotekarza</p>
+          <h2 style="font-size:clamp(1.5rem,3vw,2rem)">Wszystkie rezerwacje</h2>
+          <div class="lib-stats">
+            <div class="stat"><strong id="ls-total">0</strong><span>aktywnych rezerwacji</span></div>
+            <div class="stat"><strong id="ls-readers">0</strong><span>czytelników</span></div>
+            <div class="stat"><strong id="ls-late">0</strong><span>po terminie odbioru</span></div>
+          </div>
+          <div class="toolbar" style="grid-template-columns:1fr auto">
+            <input type="search" id="lib-q" placeholder="Filtruj po uczniu, klasie lub tytule…" aria-label="Filtruj rezerwacje">
+            <select id="lib-sort" aria-label="Sortowanie"><option value="date">Najstarsze najpierw</option><option value="klasa">Wg klasy</option><option value="title">Wg tytułu</option></select>
+          </div>
           <ul class="res-list" id="all"></ul>
-          <p class="muted" id="all-empty" hidden>Brak aktywnych rezerwacji.</p>
+          <p class="muted" id="all-empty" hidden>Brak rezerwacji.</p>
         </section>
       </div>
     </div>
   </section>
 </main>
 <footer class="site-footer">
-  <div class="container footer-inner">
-    <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
-    <a href="index.html#kontakt">Kontakt z biblioteką</a>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Biblioteka SP nr 6</h4>
+        <p>Szkoła Podstawowa Nr 6 im. Michała Elwiro Andriollego.<br>Czytamy, odkrywamy, rozmawiamy o książkach.</p>
+      </div>
+      <div>
+        <h4>Na skróty</h4>
+        <ul><li><a href="katalog.html">Katalog książek</a></li><li><a href="index.html#godziny">Godziny otwarcia</a></li><li><a href="index.html#regulamin">Regulamin</a></li><li><a href="konto.html">Moje konto</a></li></ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul><li>[uzupełnij adres szkoły]</li><li>tel. [uzupełnij]</li><li>[uzupełnij e-mail]</li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Biblioteka Szkoły Podstawowej Nr 6 im. Michała Elwiro Andriollego</span>
+      <a href="#main">Do góry ↑</a>
+    </div>
   </div>
 </footer>
+<button class="to-top" type="button" aria-label="Przewiń do góry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script type="module">
-  import { userPromise, myReservations, allReservations, cancelReservation, errorText, esc } from "./js/app.js";
-  const $ = id => document.getElementById(id);
-  const fmt = d => new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
-  const msg = $("msg");
-  function show(text, type) { msg.textContent = text; msg.className = "alert " + type; msg.hidden = false; }
+import { userPromise, myReservations, allReservations, cancelReservation, getFavorites, toggleFavorite, pickupDeadline,
+  resetDemo, esc, fmtDate, initials, toast, observeReveal, MAX_RESERVATIONS } from "./js/app.js";
+import { BOOKS } from "./js/books.js";
+import { coverColor } from "./js/ui.js";
 
-  const user = await userPromise;
-  if (!user) location.replace("logowanie.html?next=konto.html");
-  else {
-    $("u-name").textContent = user.name;
-    $("u-email").textContent = user.email;
-    $("u-klasa").textContent = user.klasa || "—";
-    $("u-role").textContent = user.role === "bibliotekarz" ? "Bibliotekarz" : "Czytelnik";
-    $("u-created").textContent = fmt(user.createdAt);
-    $("loading").hidden = true; $("account").hidden = false;
-    await loadMine();
-    if (user.role === "bibliotekarz") { $("librarian").hidden = false; await loadAll(); }
-  }
+const $ = (id) => document.getElementById(id);
+const book = (id) => BOOKS.find((b) => b.id === id) || { title: "?", author: "", id };
+const user = await userPromise;
 
-  async function loadMine() {
-    try {
-      const list = await myReservations(user);
-      $("mine").innerHTML = list.map(r => `<li>
-        <div><strong>${esc(r.title)}</strong><div class="who">${esc(r.author)} · zarezerwowano ${fmt(r.createdAt)}</div></div>
-        <button class="btn btn-small btn-ghost" data-cancel="${esc(r.id)}">Anuluj</button></li>`).join("");
-      $("mine-empty").hidden = list.length > 0;
-    } catch (e) { show(errorText(e), "error"); }
-  }
-  async function loadAll() {
-    try {
-      const list = await allReservations();
-      $("all").innerHTML = list.map(r => `<li>
-        <div><strong>${esc(r.title)}</strong><div class="who">${esc(r.userName)}${r.klasa ? " (" + esc(r.klasa) + ")" : ""} · ${fmt(r.createdAt)}</div></div>
-        <button class="btn btn-small" data-cancel="${esc(r.id)}" data-issued="1">Wydano</button></li>`).join("");
-      $("all-empty").hidden = list.length > 0;
-    } catch (e) { show(errorText(e), "error"); }
-  }
+function deadline(r) {
+  const d = pickupDeadline(r.createdAt), late = d < new Date();
+  return `<span class="deadline ${late ? "late" : ""}">${late ? "Po terminie" : "Odbiór do"} ${fmtDate(d)}</span>`;
+}
+const item = (b, extra, acts) => `<li><span class="mini" style="background:${coverColor(b.id)}"></span>
+  <div class="info"><strong>${esc(b.title)}</strong><div class="who">${extra}</div></div><div class="acts">${acts}</div></li>`;
 
-  document.addEventListener("click", async e => {
-    const btn = e.target.closest("[data-cancel]");
-    if (!btn) return;
-    btn.disabled = true;
+function init() {
+  $("u-initials").textContent = initials(user.name);
+  $("u-first").textContent = user.name.split(" ")[0];
+  $("u-role-eyebrow").textContent = user.role === "bibliotekarz" ? "Bibliotekarz" : "Czytelnik" + (user.demo ? " · konto testowe" : "");
+  $("u-name").textContent = user.name;
+  $("u-email").textContent = user.email;
+  $("u-klasa").textContent = user.klasa || "—";
+  $("u-created").textContent = fmtDate(user.createdAt);
+  $("loading").hidden = true; $("account").hidden = false;
+  if (user.role === "bibliotekarz") $("librarian").hidden = false;
+  renderAll();
+  observeReveal();
+}
+
+function renderAll() {
+  const mine = myReservations(user);
+  $("mine-count").textContent = mine.length;
+  $("mine").innerHTML = mine.map((r) => item(book(r.bookId), `${esc(book(r.bookId).author)} · ${deadline(r)}`,
+    `<button class="btn btn-small btn-ghost" data-cancel="${esc(r.id)}">Anuluj</button>`)).join("");
+  $("mine-empty").hidden = mine.length > 0;
+  $("limit-text").textContent = `${mine.length} / ${MAX_RESERVATIONS}`;
+  requestAnimationFrame(() => { $("limit-bar").style.width = (mine.length / MAX_RESERVATIONS) * 100 + "%"; });
+
+  const favs = getFavorites(user).map(book);
+  $("fav-count").textContent = favs.length;
+  $("favs").innerHTML = favs.map((b) => item(b, esc(b.author),
+    `<a class="btn btn-small" href="katalog.html?ksiazka=${b.id}">Zobacz</a><button class="btn btn-small btn-ghost" data-unfav="${b.id}" aria-label="Usuń z ulubionych">✕</button>`)).join("");
+  $("fav-empty").hidden = favs.length > 0;
+
+  if (user.role === "bibliotekarz") renderLib();
+}
+
+function renderLib() {
+  const all = allReservations();
+  $("ls-total").textContent = all.length;
+  $("ls-readers").textContent = new Set(all.map((r) => r.email)).size;
+  $("ls-late").textContent = all.filter((r) => pickupDeadline(r.createdAt) < new Date()).length;
+  const term = $("lib-q").value.trim().toLowerCase();
+  const sorters = { date: (a, b) => a.createdAt.localeCompare(b.createdAt), klasa: (a, b) => (a.klasa || "").localeCompare(b.klasa || "", "pl"), title: (a, b) => book(a.bookId).title.localeCompare(book(b.bookId).title, "pl") };
+  const list = all.filter((r) => !term || `${r.userName} ${r.klasa} ${book(r.bookId).title}`.toLowerCase().includes(term)).sort(sorters[$("lib-sort").value]);
+  $("all").innerHTML = list.map((r) => item(book(r.bookId), `${esc(r.userName)}${r.klasa ? " (" + esc(r.klasa) + ")" : ""} · ${deadline(r)}`,
+    `<button class="btn btn-small" data-cancel="${esc(r.id)}" data-issued="1">Wydano</button>`)).join("");
+  $("all-empty").hidden = list.length > 0;
+}
+$("lib-q").addEventListener("input", renderLib);
+$("lib-sort").addEventListener("change", renderLib);
+
+function removeAnim(btn) {
+  const li = btn.closest("li");
+  return new Promise((res) => { li.classList.add("removing"); setTimeout(res, 280); });
+}
+
+document.addEventListener("click", async (e) => {
+  const c = e.target.closest("[data-cancel]"), u = e.target.closest("[data-unfav]");
+  if (c) {
     try {
-      await cancelReservation(btn.dataset.cancel);
-      show(btn.dataset.issued ? "Rezerwacja oznaczona jako wydana." : "Rezerwacja anulowana.", "ok");
-      await loadMine();
-      if (user.role === "bibliotekarz") await loadAll();
-    } catch (err) { show(errorText(err), "error"); btn.disabled = false; }
-  });
+      cancelReservation(user, c.dataset.cancel);
+      await removeAnim(c);
+      toast(c.dataset.issued ? "✅ Książka wydana – rezerwacja zamknięta." : "Rezerwacja anulowana.");
+      renderAll();
+    } catch (err) { toast(err.message, "error"); }
+  } else if (u) {
+    toggleFavorite(user, u.dataset.unfav);
+    await removeAnim(u);
+    toast("Usunięto z ulubionych");
+    renderAll();
+  }
+});
+
+$("reset")?.addEventListener("click", async () => {
+  if (!confirm("Przywrócić dane testowe? Usunie to konta i rezerwacje utworzone w tej przeglądarce.")) return;
+  await resetDemo();
+  sessionStorage.setItem("sp6_toast", "Przywrócono dane testowe.");
+  location.href = "logowanie.html";
+});
+
+if (!user) location.replace("logowanie.html?next=konto.html");
+else init();
 </script>
 </body>
 </html>
