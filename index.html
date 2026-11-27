@@ -71,7 +71,44 @@
     </div>
   </div>
 
-  <section class="block">
+  <section class="block" id="polka">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Interaktywna półka</p>
+        <h2>Zajrzyj na naszą półkę</h2>
+        <p class="muted">Kliknij grzbiet książki – wysunie się z regału i położy na stole. Kliknij ją jeszcze raz, by odłożyć.</p>
+      </div>
+      <div class="shelf-stage reveal" id="shelf-stage">
+        <div class="bookcase"><div class="shelf-row" role="group" aria-label="Półka z książkami"></div><div class="plank"></div></div>
+        <p class="shelf-swipe">← przesuń półkę palcem, aby zobaczyć więcej książek →</p>
+        <div class="desk">
+          <div class="desk-wrap">
+            <div class="desk-surface">
+              <svg class="desk-mug" viewBox="0 0 70 80" aria-hidden="true">
+                <path class="mug-steam" d="M24 18c-4-6 4-8 0-14" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="3" stroke-linecap="round"/>
+                <path class="mug-steam" d="M38 18c-4-6 4-8 0-14" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="31" cy="74" rx="26" ry="5" fill="rgba(0,0,0,.18)"/>
+                <path d="M8 26h46v36a10 10 0 0 1-10 10H18A10 10 0 0 1 8 62z" fill="#f4ead8"/>
+                <path d="M54 34h5a8 8 0 0 1 0 16h-5" fill="none" stroke="#f4ead8" stroke-width="5"/>
+                <ellipse cx="31" cy="26" rx="23" ry="5" fill="#6b3b1c"/>
+                <path d="M8 44h46" stroke="#8b3a14" stroke-width="4"/>
+              </svg>
+              <svg class="desk-pencil" viewBox="0 0 120 16" aria-hidden="true">
+                <rect x="10" y="3" width="92" height="10" rx="1" fill="#e9b949"/><rect x="10" y="3" width="92" height="3" fill="#f3cf6d"/>
+                <path d="M102 3l16 5-16 5z" fill="#efd6b0"/><path d="M113 6.5l5 1.5-5 1.5z" fill="#333"/>
+                <rect x="2" y="3" width="9" height="10" rx="2" fill="#e5707e"/><rect x="9" y="3" width="3" height="10" fill="#bbb"/>
+              </svg>
+              <div class="desk-slot"></div>
+              <p class="desk-hint">Wybierz książkę z półki</p>
+            </div>
+          </div>
+          <div class="desk-info" aria-live="polite"><div class="desk-empty"><p>Tu pojawi się opis wybranej książki.<br>Kliknij dowolny grzbiet na półce.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block alt">
     <div class="container">
       <div class="section-head reveal">
         <p class="eyebrow">Oferta</p>
@@ -87,7 +124,7 @@
     </div>
   </section>
 
-  <section class="block alt" id="polecamy">
+  <section class="block" id="polecamy">
     <div class="container two-col">
       <div class="reveal left" id="week-cover" style="max-width:300px;justify-self:center;width:100%"></div>
       <div class="reveal right">
@@ -103,7 +140,7 @@
     </div>
   </section>
 
-  <section class="block">
+  <section class="block alt">
     <div class="container">
       <div class="section-head reveal">
         <p class="eyebrow">Świeżo na półkach</p>
@@ -113,7 +150,7 @@
     </div>
   </section>
 
-  <section class="block alt" id="wydarzenia">
+  <section class="block" id="wydarzenia">
     <div class="container two-col">
       <div class="reveal">
         <p class="eyebrow">Kalendarz</p>
@@ -125,7 +162,7 @@
     </div>
   </section>
 
-  <section class="block" id="godziny">
+  <section class="block alt" id="godziny">
     <div class="container two-col">
       <div class="reveal left">
         <p class="eyebrow">Zapraszamy</p>
@@ -144,7 +181,7 @@
     </div>
   </section>
 
-  <section class="block alt" id="regulamin">
+  <section class="block" id="regulamin">
     <div class="container two-col">
       <div class="reveal">
         <p class="eyebrow">Zasady</p>
@@ -161,7 +198,7 @@
     </div>
   </section>
 
-  <section class="block" id="faq">
+  <section class="block alt" id="faq">
     <div class="container">
       <div class="section-head center center reveal">
         <p class="eyebrow">FAQ</p>
@@ -176,7 +213,7 @@
     </div>
   </section>
 
-  <section class="block alt" id="kontakt">
+  <section class="block" id="kontakt">
     <div class="container two-col">
       <div class="reveal left">
         <p class="eyebrow">Kontakt</p>
@@ -219,6 +256,7 @@
 import { userPromise, available, observeReveal, countUp, esc, fmtShort } from "./js/app.js";
 import { BOOKS } from "./js/books.js";
 import { bookCard, cover, wireBooks, makeCtx } from "./js/ui.js";
+import { initShelf } from "./js/shelf.js";
 
 // Godziny otwarcia: [dzień tygodnia (1=pon), od, do]
 const HOURS = [[1, "7:45", "15:00"], [2, "7:45", "15:00"], [3, "8:00", "16:00"], [4, "7:45", "15:00"], [5, "7:45", "13:30"]];
@@ -276,6 +314,8 @@ const { open } = wireBooks(document.getElementById("main"), ctx, render);
 document.getElementById("week-more").addEventListener("click", () => open(pick.id));
 document.querySelector("[data-open-book]").addEventListener("click", (e) => { e.preventDefault(); open("b01"); });
 observeReveal();
+
+initShelf(document.getElementById("shelf-stage"), { featuredId: pick.id });
 
 if (user) { const a = document.getElementById("hero-login"); a.textContent = "Moje konto"; a.href = "konto.html"; }
 
