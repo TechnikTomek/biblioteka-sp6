@@ -3,9 +3,14 @@
 // Wersja demonstracyjna: konta i rezerwacje zapisywane są
 // wyłącznie w przeglądarce (localStorage). Bez serwera.
 // ==========================================================
-import { BOOKS } from "./books.js";
+import { BOOKS, findBook, saveBooks, resetBooks } from "./books.js";
 
 export const MAX_RESERVATIONS = 3;
+export const MAX_LOANS = 5;
+export const LOAN_DAYS = 14;        // zwykłe książki
+export const LOAN_DAYS_LEKTURA = 21; // lektury
+export const RENEW_DAYS = 14;
+export const MAX_RENEWALS = 1;
 export const DEMO_ACCOUNTS = [
   { email: "uczen@sp6.pl", password: "uczen123", name: "Ola Testowa", klasa: "6a", role: "czytelnik" },
   { email: "bibliotekarz@sp6.pl", password: "biblio123", name: "Pani Bibliotekarka", klasa: "", role: "bibliotekarz" },
@@ -24,7 +29,8 @@ const store = {
   },
   del(key) { mem.delete(key); try { localStorage.removeItem(key); } catch {} },
 };
-const K = { users: "sp6_users", session: "sp6_session", res: "sp6_reservations", fav: "sp6_favorites", seed: "sp6_seed", theme: "sp6_theme" };
+const K = { users: "sp6_users", session: "sp6_session", res: "sp6_reservations", loans: "sp6_loans", fav: "sp6_favorites", seed: "sp6_seed", theme: "sp6_theme" };
+const SEED_VERSION = 3;
 
 async function hash(text) {
   try {
@@ -37,30 +43,58 @@ async function hash(text) {
 
 const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString();
 
+const daysFrom = (iso, n) => new Date(new Date(iso).getTime() + n * 864e5).toISOString();
+const OTHER_READERS = [
+  { email: "jan@sp6.pl", name: "Jan Kowalski", klasa: "4b" },
+  { email: "zosia@sp6.pl", name: "Zosia Nowak", klasa: "7c" },
+  { email: "kuba@sp6.pl", name: "Kuba Wiśniewski", klasa: "5a" },
+];
+
 async function seed() {
-  if (store.get(K.seed, 0) === 2) return;
-  const users = store.get(K.users, []).filter((u) => !DEMO_ACCOUNTS.some((d) => d.email === u.email));
+  if (store.get(K.seed, 0) === SEED_VERSION) return;
+  const keep = store.get(K.users, []).filter((u) => !u.demo && !OTHER_READERS.some((o) => o.email === u.email));
+  const users = [...keep];
   for (const d of DEMO_ACCOUNTS) {
     users.push({ email: d.email, name: d.name, klasa: d.klasa, role: d.role, demo: true, pass: await hash(d.password), createdAt: daysAgo(120) });
   }
+  for (const o of OTHER_READERS) {
+    users.push({ ...o, role: "czytelnik", demo: true, pass: await hash(Math.random().toString(36)), createdAt: daysAgo(200) });
+  }
   store.set(K.users, users);
-  const others = store.get(K.res, []).filter((r) => !r.seed);
   store.set(K.res, [
-    ...others,
+    ...store.get(K.res, []).filter((r) => !r.seed),
     { id: "s1", seed: true, email: "uczen@sp6.pl", userName: "Ola Testowa", klasa: "6a", bookId: "b06", createdAt: daysAgo(1) },
     { id: "s2", seed: true, email: "jan@sp6.pl", userName: "Jan Kowalski", klasa: "4b", bookId: "b03", createdAt: daysAgo(2) },
     { id: "s3", seed: true, email: "zosia@sp6.pl", userName: "Zosia Nowak", klasa: "7c", bookId: "b05", createdAt: daysAgo(6) },
     { id: "s4", seed: true, email: "zosia@sp6.pl", userName: "Zosia Nowak", klasa: "7c", bookId: "b20", createdAt: daysAgo(0) },
   ]);
+  const L = (id, email, bookId, fromDays, len, returnedDays = null, renewals = 0) => {
+    const u = [...DEMO_ACCOUNTS, ...OTHER_READERS].find((x) => x.email === email);
+    const from = daysAgo(fromDays);
+    return { id, seed: true, email, userName: u.name, klasa: u.klasa, bookId, from, due: daysFrom(from, len), returned: returnedDays == null ? null : daysAgo(returnedDays), renewals };
+  };
+  store.set(K.loans, [
+    ...store.get(K.loans, []).filter((l) => !l.seed),
+    L("l1", "uczen@sp6.pl", "b11", 10, 14),
+    L("l2", "uczen@sp6.pl", "b02", 18, 21),
+    L("l3", "uczen@sp6.pl", "b09", 90, 21, 75),
+    L("l4", "uczen@sp6.pl", "b16", 60, 14, 50),
+    L("l5", "uczen@sp6.pl", "b17", 40, 14, 31),
+    L("l6", "jan@sp6.pl", "b08", 30, 21),
+    L("l7", "zosia@sp6.pl", "b13", 5, 21),
+    L("l8", "kuba@sp6.pl", "b19", 12, 14, null, 1),
+    L("l9", "kuba@sp6.pl", "b01", 120, 21, 100),
+  ]);
   const fav = store.get(K.fav, {});
   fav["uczen@sp6.pl"] ??= ["b04", "b22"];
   store.set(K.fav, fav);
-  store.set(K.seed, 2);
+  store.set(K.seed, SEED_VERSION);
 }
 const seeded = seed();
 
 export async function resetDemo() {
-  for (const k of [K.users, K.session, K.res, K.fav, K.seed]) store.del(k);
+  for (const k of [K.users, K.session, K.res, K.loans, K.fav, K.seed]) store.del(k);
+  resetBooks();
   await seed();
 }
 
@@ -106,11 +140,13 @@ export function logout() {
 export const allReservations = () => store.get(K.res, []).slice().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 export const myReservations = (user) => allReservations().filter((r) => r.email === user.email);
 export const reservedCount = (bookId) => store.get(K.res, []).filter((r) => r.bookId === bookId).length;
-export const available = (book) => Math.max(0, book.copies - reservedCount(book.id));
+export const loanedCount = (bookId) => store.get(K.loans, []).filter((l) => l.bookId === bookId && !l.returned).length;
+export const available = (book) => Math.max(0, book.copies - reservedCount(book.id) - loanedCount(book.id));
 
 export function reserve(user, bookId) {
-  const book = BOOKS.find((b) => b.id === bookId);
+  const book = findBook(bookId);
   if (!book) throw new Error("Nie znaleziono książki.");
+  if (myLoans(user).some((l) => l.bookId === bookId)) throw new Error("Masz już tę książkę wypożyczoną.");
   const mine = myReservations(user);
   if (mine.some((r) => r.bookId === bookId)) throw new Error("Ta książka jest już przez Ciebie zarezerwowana.");
   if (mine.length >= MAX_RESERVATIONS) throw new Error(`Możesz mieć maksymalnie ${MAX_RESERVATIONS} rezerwacje naraz.`);
@@ -135,8 +171,128 @@ export function pickupDeadline(iso) {
   return d;
 }
 
+// ---------- Wypożyczenia ----------
+const DAY = 864e5;
+export const allLoans = () => store.get(K.loans, []).slice().sort((a, b) => b.from.localeCompare(a.from));
+export const activeLoans = () => allLoans().filter((l) => !l.returned).sort((a, b) => a.due.localeCompare(b.due));
+export const myLoans = (user) => activeLoans().filter((l) => l.email === user.email);
+export const myHistory = (user) => allLoans().filter((l) => l.email === user.email && l.returned);
+export const daysLeft = (loan) => Math.ceil((new Date(loan.due).setHours(23, 59, 59) - Date.now()) / DAY);
+export const isOverdue = (loan) => !loan.returned && daysLeft(loan) < 0;
+export const loanDays = (book) => (book?.category?.startsWith("lektura") ? LOAN_DAYS_LEKTURA : LOAN_DAYS);
+
+export function canRenew(loan) {
+  if (loan.returned) return "Książka została już zwrócona.";
+  if (isOverdue(loan)) return "Nie można prolongować – termin zwrotu minął.";
+  if ((loan.renewals || 0) >= MAX_RENEWALS) return "Wykorzystano już prolongatę.";
+  if (reservedCount(loan.bookId) > 0 && available(findBook(loan.bookId) || { copies: 0 }) < 1) return "Ktoś czeka na tę książkę – prolongata niemożliwa.";
+  return "";
+}
+
+function saveLoan(id, patch) {
+  const list = store.get(K.loans, []);
+  const i = list.findIndex((l) => l.id === id);
+  if (i < 0) throw new Error("Nie znaleziono wypożyczenia.");
+  list[i] = { ...list[i], ...patch };
+  store.set(K.loans, list);
+  return list[i];
+}
+
+export function renewLoan(user, id) {
+  const loan = store.get(K.loans, []).find((l) => l.id === id);
+  if (!loan) throw new Error("Nie znaleziono wypożyczenia.");
+  if (loan.email !== user.email && user.role !== "bibliotekarz") throw new Error("Brak uprawnień.");
+  const why = canRenew(loan);
+  if (why) throw new Error(why);
+  return saveLoan(id, { due: new Date(new Date(loan.due).getTime() + RENEW_DAYS * DAY).toISOString(), renewals: (loan.renewals || 0) + 1 });
+}
+
+export function returnLoan(user, id) {
+  if (user.role !== "bibliotekarz") throw new Error("Zwrot przyjmuje bibliotekarz.");
+  return saveLoan(id, { returned: new Date().toISOString() });
+}
+
+/** Bibliotekarz wypożycza książkę czytelnikowi (opcjonalnie realizując jego rezerwację). */
+export function lendBook(user, readerEmail, bookId, fromReservationId = null) {
+  if (user.role !== "bibliotekarz") throw new Error("Brak uprawnień.");
+  const reader = findUser(readerEmail);
+  const book = findBook(bookId);
+  if (!reader) throw new Error("Wybierz czytelnika.");
+  if (!book) throw new Error("Wybierz książkę.");
+  const res = store.get(K.res, []);
+  const r = fromReservationId ? res.find((x) => x.id === fromReservationId) : null;
+  if (!r && available(book) < 1) throw new Error("Brak wolnych egzemplarzy tej książki.");
+  if (activeLoans().some((l) => l.email === reader.email && l.bookId === bookId)) throw new Error("Czytelnik ma już tę książkę.");
+  if (activeLoans().filter((l) => l.email === reader.email).length >= MAX_LOANS) throw new Error(`Czytelnik ma już ${MAX_LOANS} wypożyczeń.`);
+  const from = new Date().toISOString();
+  const loan = { id: "w" + Math.random().toString(36).slice(2, 9), email: reader.email, userName: reader.name, klasa: reader.klasa, bookId,
+    from, due: new Date(Date.now() + loanDays(book) * DAY).toISOString(), returned: null, renewals: 0 };
+  store.set(K.loans, [...store.get(K.loans, []), loan]);
+  if (r) store.set(K.res, res.filter((x) => x.id !== r.id));
+  return loan;
+}
+
+export function readers() {
+  return store.get(K.users, []).filter((u) => u.role !== "bibliotekarz").map(pub).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+}
+
+// ---------- Książki (bibliotekarz) ----------
+const CAT_KEYS = ["lektura-1-3", "lektura-4-6", "lektura-7-8", "popularne"];
+function cleanBook(data) {
+  const b = {
+    title: String(data.title || "").trim().slice(0, 150),
+    author: String(data.author || "").trim().slice(0, 100),
+    year: Number(data.year),
+    category: CAT_KEYS.includes(data.category) ? data.category : "popularne",
+    copies: Math.floor(Number(data.copies)),
+    isNew: data.isNew === true || data.isNew === "on" || data.isNew === "true",
+    desc: String(data.desc || "").trim().slice(0, 600),
+    color: /^#[0-9a-f]{6}$/i.test(data.color || "") ? data.color : undefined,
+  };
+  if (b.title.length < 2) throw new Error("Podaj tytuł.");
+  if (b.author.length < 3) throw new Error("Podaj autora.");
+  if (!Number.isFinite(b.year) || b.year < 1400 || b.year > new Date().getFullYear() + 1) throw new Error("Podaj poprawny rok wydania.");
+  if (!Number.isFinite(b.copies) || b.copies < 1 || b.copies > 500) throw new Error("Liczba egzemplarzy: od 1 do 500.");
+  return b;
+}
+
+export function addBook(user, data) {
+  if (user.role !== "bibliotekarz") throw new Error("Brak uprawnień.");
+  const b = cleanBook(data);
+  const n = Math.max(0, ...BOOKS.map((x) => Number(String(x.id).replace(/\D/g, "")) || 0)) + 1;
+  const book = { id: "b" + String(n).padStart(2, "0"), ...b };
+  BOOKS.push(book);
+  saveBooks();
+  return book;
+}
+
+export function updateBook(user, id, data) {
+  if (user.role !== "bibliotekarz") throw new Error("Brak uprawnień.");
+  const book = findBook(id);
+  if (!book) throw new Error("Nie znaleziono książki.");
+  const b = cleanBook(data);
+  const busy = loanedCount(id) + reservedCount(id);
+  if (b.copies < busy) throw new Error(`Nie można zmniejszyć liczby egzemplarzy poniżej ${busy} (wypożyczone + zarezerwowane).`);
+  Object.assign(book, b);
+  saveBooks();
+  return book;
+}
+
+export function deleteBook(user, id) {
+  if (user.role !== "bibliotekarz") throw new Error("Brak uprawnień.");
+  if (loanedCount(id) > 0) throw new Error("Nie można usunąć – książka jest wypożyczona.");
+  if (reservedCount(id) > 0) throw new Error("Nie można usunąć – książka ma rezerwacje.");
+  const i = BOOKS.findIndex((b) => b.id === id);
+  if (i < 0) throw new Error("Nie znaleziono książki.");
+  BOOKS.splice(i, 1);
+  saveBooks();
+  const fav = store.get(K.fav, {});
+  for (const k of Object.keys(fav)) fav[k] = fav[k].filter((x) => x !== id);
+  store.set(K.fav, fav);
+}
+
 // ---------- Ulubione ----------
-export const getFavorites = (user) => (user ? store.get(K.fav, {})[user.email] || [] : []);
+export const getFavorites = (user) => (user ? (store.get(K.fav, {})[user.email] || []).filter((id) => findBook(id)) : []);
 export function toggleFavorite(user, bookId) {
   const all = store.get(K.fav, {});
   const list = new Set(all[user.email] || []);
@@ -252,7 +408,21 @@ function setupChrome() {
   if (pending) { sessionStorage.removeItem("sp6_toast"); setTimeout(() => toast(pending), 300); }
 }
 
+// Karty lekko przechylają się za kursorem
+function setupTilt() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(hover: hover)").matches) return;
+  document.addEventListener("pointermove", (e) => {
+    const c = e.target.closest?.(".card.lift");
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+    c.style.transform = `perspective(700px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-6px)`;
+    c.onpointerleave = () => { c.style.transform = ""; };
+  });
+}
+
 document.documentElement.classList.remove("no-js");
+setupTilt();
 setupChrome();
 setupTheme();
 observeReveal();

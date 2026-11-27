@@ -35,7 +35,7 @@
   </div>
 </header>
 <main id="main">
-  <section class="block" style="padding-top:clamp(36px,6vw,64px)">
+  <section class="block" style="padding-top:clamp(32px,5vw,56px)">
     <div class="container">
       <p id="loading" class="muted">Wczytywanie…</p>
       <div id="account" hidden>
@@ -43,53 +43,14 @@
           <div class="big-avatar" id="u-initials"></div>
           <div><p class="eyebrow" style="margin:0" id="u-role-eyebrow"></p><h1>Cześć, <span id="u-first"></span>!</h1></div>
         </div>
-        <div class="account-grid">
-          <aside class="card profile reveal left">
-            <h2 style="font-size:1.25rem">Twój profil</h2>
-            <dl>
-              <dt>Imię</dt><dd id="u-name"></dd>
-              <dt>E-mail</dt><dd id="u-email"></dd>
-              <dt>Klasa</dt><dd id="u-klasa"></dd>
-              <dt>Konto od</dt><dd id="u-created"></dd>
-            </dl>
-            <div style="font-size:.9rem"><strong>Limit rezerwacji</strong> <span class="muted" id="limit-text"></span></div>
-            <div class="meter"><i id="limit-bar"></i></div>
-            <a href="katalog.html" class="btn btn-small btn-block" style="margin-top:16px">Szukaj książek</a>
-            <button class="btn btn-small btn-ghost btn-block" id="reset" type="button" style="margin-top:8px">Przywróć dane testowe</button>
-          </aside>
-          <div>
-            <section class="panel reveal">
-              <h2>Moje rezerwacje <span class="badge-count" id="mine-count">0</span></h2>
-              <ul class="res-list" id="mine"></ul>
-              <p class="muted" id="mine-empty" hidden>Nie masz żadnych rezerwacji. <a href="katalog.html">Przejdź do katalogu</a>.</p>
-            </section>
-            <section class="panel reveal" style="--d:.1s">
-              <h2>Ulubione <span class="badge-count" id="fav-count">0</span></h2>
-              <ul class="res-list" id="favs"></ul>
-              <p class="muted" id="fav-empty" hidden>Kliknij ♡ przy książce w katalogu, aby dodać ją tutaj.</p>
-            </section>
-          </div>
-        </div>
-
-        <section id="librarian" class="panel reveal" hidden style="margin-top:56px">
-          <p class="eyebrow">Panel bibliotekarza</p>
-          <h2 style="font-size:clamp(1.5rem,3vw,2rem)">Wszystkie rezerwacje</h2>
-          <div class="lib-stats">
-            <div class="stat"><strong id="ls-total">0</strong><span>aktywnych rezerwacji</span></div>
-            <div class="stat"><strong id="ls-readers">0</strong><span>czytelników</span></div>
-            <div class="stat"><strong id="ls-late">0</strong><span>po terminie odbioru</span></div>
-          </div>
-          <div class="toolbar" style="grid-template-columns:1fr auto">
-            <input type="search" id="lib-q" placeholder="Filtruj po uczniu, klasie lub tytule…" aria-label="Filtruj rezerwacje">
-            <select id="lib-sort" aria-label="Sortowanie"><option value="date">Najstarsze najpierw</option><option value="klasa">Wg klasy</option><option value="title">Wg tytułu</option></select>
-          </div>
-          <ul class="res-list" id="all"></ul>
-          <p class="muted" id="all-empty" hidden>Brak rezerwacji.</p>
-        </section>
+        <div class="stats" id="kpis" style="margin:0 0 30px"></div>
+        <div class="ptabs" role="tablist" id="ptabs"></div>
+        <div id="panel"></div>
       </div>
     </div>
   </section>
 </main>
+<dialog class="modal" id="book-editor"></dialog>
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
@@ -115,99 +76,300 @@
 <button class="to-top" type="button" aria-label="Przewiń do góry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script type="module">
 import { userPromise, myReservations, allReservations, cancelReservation, getFavorites, toggleFavorite, pickupDeadline,
-  resetDemo, esc, fmtDate, initials, toast, observeReveal, MAX_RESERVATIONS } from "./js/app.js";
-import { BOOKS } from "./js/books.js";
-import { coverColor } from "./js/ui.js";
+  myLoans, myHistory, activeLoans, allLoans, renewLoan, returnLoan, lendBook, canRenew, daysLeft, isOverdue, loanDays, readers,
+  addBook, updateBook, deleteBook, available, loanedCount, reservedCount,
+  resetDemo, esc, fmtDate, fmtShort, initials, toast, countUp, MAX_RESERVATIONS, MAX_LOANS, LOAN_DAYS, LOAN_DAYS_LEKTURA, RENEW_DAYS } from "./js/app.js";
+import { BOOKS, CATEGORIES, findBook } from "./js/books.js";
+import { coverColor, book3d, tiltFollow } from "./js/ui.js";
 
 const $ = (id) => document.getElementById(id);
-const book = (id) => BOOKS.find((b) => b.id === id) || { title: "?", author: "", id };
+const book = (id) => findBook(id) || { id, title: "(usunięta książka)", author: "", category: "popularne", year: "", copies: 0 };
 const user = await userPromise;
+const LIB = user?.role === "bibliotekarz";
+const mini = (id) => `<span class="mini" style="background:${coverColor(id)}"></span>`;
+const plural = (n, a, b, c) => `${n} ${n === 1 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? b : c}`;
 
-function deadline(r) {
+function loanStatus(l) {
+  if (l.returned) return `<span class="status done">Zwrócona ${fmtShort(l.returned)}</span>`;
+  const d = daysLeft(l);
+  if (d < 0) return `<span class="status late">Po terminie ${plural(-d, "dzień", "dni", "dni")}</span>`;
+  if (d <= 3) return `<span class="status soon">${d === 0 ? "Zwrot dziś" : "Zostało " + plural(d, "dzień", "dni", "dni")}</span>`;
+  return `<span class="status ok">Zostało ${plural(d, "dzień", "dni", "dni")}</span>`;
+}
+function resDeadline(r) {
   const d = pickupDeadline(r.createdAt), late = d < new Date();
-  return `<span class="deadline ${late ? "late" : ""}">${late ? "Po terminie" : "Odbiór do"} ${fmtDate(d)}</span>`;
-}
-const item = (b, extra, acts) => `<li><span class="mini" style="background:${coverColor(b.id)}"></span>
-  <div class="info"><strong>${esc(b.title)}</strong><div class="who">${extra}</div></div><div class="acts">${acts}</div></li>`;
-
-function init() {
-  $("u-initials").textContent = initials(user.name);
-  $("u-first").textContent = user.name.split(" ")[0];
-  $("u-role-eyebrow").textContent = user.role === "bibliotekarz" ? "Bibliotekarz" : "Czytelnik" + (user.demo ? " · konto testowe" : "");
-  $("u-name").textContent = user.name;
-  $("u-email").textContent = user.email;
-  $("u-klasa").textContent = user.klasa || "—";
-  $("u-created").textContent = fmtDate(user.createdAt);
-  $("loading").hidden = true; $("account").hidden = false;
-  if (user.role === "bibliotekarz") $("librarian").hidden = false;
-  renderAll();
-  observeReveal();
+  return `<span class="status ${late ? "late" : "ok"}">${late ? "Minął termin odbioru" : "Odbiór do " + fmtShort(d)}</span>`;
 }
 
-function renderAll() {
-  const mine = myReservations(user);
-  $("mine-count").textContent = mine.length;
-  $("mine").innerHTML = mine.map((r) => item(book(r.bookId), `${esc(book(r.bookId).author)} · ${deadline(r)}`,
-    `<button class="btn btn-small btn-ghost" data-cancel="${esc(r.id)}">Anuluj</button>`)).join("");
-  $("mine-empty").hidden = mine.length > 0;
-  $("limit-text").textContent = `${mine.length} / ${MAX_RESERVATIONS}`;
-  requestAnimationFrame(() => { $("limit-bar").style.width = (mine.length / MAX_RESERVATIONS) * 100 + "%"; });
-
-  const favs = getFavorites(user).map(book);
-  $("fav-count").textContent = favs.length;
-  $("favs").innerHTML = favs.map((b) => item(b, esc(b.author),
-    `<a class="btn btn-small" href="katalog.html?ksiazka=${b.id}">Zobacz</a><button class="btn btn-small btn-ghost" data-unfav="${b.id}" aria-label="Usuń z ulubionych">✕</button>`)).join("");
-  $("fav-empty").hidden = favs.length > 0;
-
-  if (user.role === "bibliotekarz") renderLib();
+// ---------- KPI ----------
+function kpis() {
+  const items = LIB ? [
+    [activeLoans().length, "aktywnych wypożyczeń"],
+    [activeLoans().filter(isOverdue).length, "po terminie zwrotu"],
+    [allReservations().length, "rezerwacji do wydania"],
+    [BOOKS.reduce((s, b) => s + b.copies, 0), `egzemplarzy · ${BOOKS.length} tytułów`],
+  ] : [
+    [myLoans(user).length, `wypożyczeń (limit ${MAX_LOANS})`],
+    [myReservations(user).length, `rezerwacji (limit ${MAX_RESERVATIONS})`],
+    [myHistory(user).length, "przeczytanych książek"],
+    [myLoans(user).filter(isOverdue).length, "po terminie zwrotu"],
+  ];
+  $("kpis").innerHTML = items.map(([n, l], i) => `<div class="stat reveal in" style="animation:fadeUp .5s ${i * 0.07}s both"><strong data-count="${n}">0</strong><span>${l}</span></div>`).join("");
+  $("kpis").querySelectorAll("[data-count]").forEach(countUp);
 }
 
-function renderLib() {
-  const all = allReservations();
-  $("ls-total").textContent = all.length;
-  $("ls-readers").textContent = new Set(all.map((r) => r.email)).size;
-  $("ls-late").textContent = all.filter((r) => pickupDeadline(r.createdAt) < new Date()).length;
-  const term = $("lib-q").value.trim().toLowerCase();
-  const sorters = { date: (a, b) => a.createdAt.localeCompare(b.createdAt), klasa: (a, b) => (a.klasa || "").localeCompare(b.klasa || "", "pl"), title: (a, b) => book(a.bookId).title.localeCompare(book(b.bookId).title, "pl") };
-  const list = all.filter((r) => !term || `${r.userName} ${r.klasa} ${book(r.bookId).title}`.toLowerCase().includes(term)).sort(sorters[$("lib-sort").value]);
-  $("all").innerHTML = list.map((r) => item(book(r.bookId), `${esc(r.userName)}${r.klasa ? " (" + esc(r.klasa) + ")" : ""} · ${deadline(r)}`,
-    `<button class="btn btn-small" data-cancel="${esc(r.id)}" data-issued="1">Wydano</button>`)).join("");
-  $("all-empty").hidden = list.length > 0;
-}
-$("lib-q").addEventListener("input", renderLib);
-$("lib-sort").addEventListener("change", renderLib);
+// ---------- Zakładki ----------
+const TABS = LIB
+  ? [["wypozyczenia", "Wypożyczenia", () => activeLoans().length, () => activeLoans().filter(isOverdue).length],
+     ["rezerwacje", "Rezerwacje", () => allReservations().length],
+     ["ksiazki", "Książki", () => BOOKS.length],
+     ["czytelnicy", "Czytelnicy", () => readers().length],
+     ["profil", "Profil"]]
+  : [["wypozyczenia", "Wypożyczenia", () => myLoans(user).length, () => myLoans(user).filter(isOverdue).length],
+     ["rezerwacje", "Rezerwacje", () => myReservations(user).length],
+     ["historia", "Historia", () => myHistory(user).length],
+     ["ulubione", "Ulubione", () => getFavorites(user).length],
+     ["profil", "Profil"]];
+let tab = TABS.some((t) => t[0] === location.hash.slice(1)) ? location.hash.slice(1) : "wypozyczenia";
 
-function removeAnim(btn) {
-  const li = btn.closest("li");
-  return new Promise((res) => { li.classList.add("removing"); setTimeout(res, 280); });
+function renderTabs() {
+  $("ptabs").innerHTML = TABS.map(([id, label, count, warn]) => {
+    const n = count ? count() : null, w = warn ? warn() : 0;
+    return `<button role="tab" data-tab="${id}" aria-selected="${id === tab}">${label}${n != null ? ` <span class="pill-n ${w ? "warn" : ""}">${n}</span>` : ""}</button>`;
+  }).join("");
+}
+$("ptabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-tab]"); if (!b) return;
+  tab = b.dataset.tab; history.replaceState(null, "", "#" + tab); render();
+});
+
+function render() {
+  kpis(); renderTabs();
+  const p = $("panel");
+  p.className = "ptab-panel"; void p.offsetWidth;
+  p.innerHTML = (VIEWS[tab] || VIEWS.wypozyczenia)();
+  p.classList.add("ptab-panel");
+  p.querySelectorAll(".b3-stage").forEach(tiltFollow);
+  AFTER[tab]?.();
+}
+
+// ---------- Widoki czytelnika ----------
+function loanCard(l, i) {
+  const b = book(l.bookId), d = daysLeft(l), total = Math.max(1, Math.round((new Date(l.due) - new Date(l.from)) / 864e5));
+  const pct = Math.max(0, Math.min(100, (d / total) * 100));
+  const col = d < 0 ? "var(--err)" : d <= 3 ? "var(--gold)" : "var(--ok)";
+  const why = canRenew(l);
+  return `<article class="card loan-card" style="animation-delay:${i * 0.07}s">
+    <div class="b3-stage">${book3d(b, { w: 64, h: 92, d: 12, cls: "b3-sm" })}</div>
+    <div>
+      <h3>${esc(b.title)}</h3><div class="muted" style="font-size:.88rem">${esc(b.author)}</div>
+      <div class="loan-meta">
+        <div class="ring" style="--p:${pct};--col:${col}"><b>${d < 0 ? "!" : d}<small>${d < 0 ? "po term." : "dni"}</small></b></div>
+        <div class="muted">Wypożyczono ${fmtShort(l.from)}<br>Zwrot do <strong style="color:var(--ink)">${fmtDate(l.due)}</strong>${l.renewals ? "<br>prolongowano" : ""}</div>
+      </div>
+      ${loanStatus(l)}
+      <div style="margin-top:12px"><button class="btn btn-small ${why ? "btn-ghost" : ""}" data-renew="${l.id}" ${why ? `disabled title="${esc(why)}"` : ""}>Prolonguj o ${RENEW_DAYS} dni</button></div>
+      ${why ? `<div class="muted" style="font-size:.78rem;margin-top:6px">${esc(why)}</div>` : ""}
+    </div>
+  </article>`;
+}
+
+const VIEWS = {
+  wypozyczenia() {
+    if (LIB) return libLoans();
+    const list = myLoans(user);
+    return `<p class="muted">Lektury wypożyczamy na ${LOAN_DAYS_LEKTURA} dni, pozostałe książki na ${LOAN_DAYS} dni. Każde wypożyczenie możesz raz przedłużyć o ${RENEW_DAYS} dni, jeśli termin jeszcze nie minął.</p>
+      ${list.length ? `<div class="loan-cards">${list.map(loanCard).join("")}</div>` : `<div class="empty"><p>Nie masz wypożyczonych książek.</p><a class="btn btn-small" href="katalog.html">Znajdź coś do czytania</a></div>`}`;
+  },
+  rezerwacje() {
+    if (LIB) return libReservations();
+    const list = myReservations(user);
+    return list.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Książka</th><th>Zarezerwowano</th><th>Status</th><th></th></tr></thead><tbody>
+      ${list.map((r, i) => `<tr style="animation-delay:${i * 0.05}s"><td><div class="t-title">${mini(r.bookId)}${esc(book(r.bookId).title)}</div></td><td>${fmtDate(r.createdAt)}</td><td>${resDeadline(r)}</td>
+      <td><div class="acts"><button class="btn btn-small btn-ghost" data-cancel="${r.id}">Anuluj</button></div></td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty"><p>Nie masz rezerwacji.</p><a class="btn btn-small" href="katalog.html">Przejdź do katalogu</a></div>`;
+  },
+  historia() {
+    const list = myHistory(user);
+    return list.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Książka</th><th>Wypożyczono</th><th>Zwrócono</th><th>Czas czytania</th></tr></thead><tbody>
+      ${list.map((l, i) => `<tr style="animation-delay:${i * 0.05}s"><td><div class="t-title">${mini(l.bookId)}<span>${esc(book(l.bookId).title)}<br><small class="muted">${esc(book(l.bookId).author)}</small></span></div></td>
+      <td>${fmtDate(l.from)}</td><td>${fmtDate(l.returned)}</td><td>${plural(Math.max(1, Math.round((new Date(l.returned) - new Date(l.from)) / 864e5)), "dzień", "dni", "dni")}</td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty"><p>Historia jest pusta – tu pojawią się zwrócone książki.</p></div>`;
+  },
+  ulubione() {
+    const favs = getFavorites(user).map(book);
+    return favs.length ? `<div class="loan-cards">${favs.map((b, i) => `<article class="card loan-card" style="animation-delay:${i * 0.07}s">
+      <div class="b3-stage">${book3d(b, { w: 64, h: 92, d: 12, cls: "b3-sm" })}</div>
+      <div><h3>${esc(b.title)}</h3><div class="muted" style="font-size:.88rem;margin-bottom:12px">${esc(b.author)} · ${b.year}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-small" href="katalog.html?ksiazka=${b.id}">Zobacz</a><button class="btn btn-small btn-ghost" data-unfav="${b.id}">Usuń</button></div></div></article>`).join("")}</div>`
+      : `<div class="empty"><p>Kliknij ♡ przy książce w katalogu, aby dodać ją tutaj.</p></div>`;
+  },
+  profil() {
+    return `<div class="two-col"><div class="card profile">
+      <h2 style="font-size:1.25rem">Twój profil</h2>
+      <dl><dt>Imię</dt><dd>${esc(user.name)}</dd><dt>E-mail</dt><dd>${esc(user.email)}</dd><dt>Klasa</dt><dd>${esc(user.klasa || "—")}</dd>
+      <dt>Rola</dt><dd>${LIB ? "Bibliotekarz" : "Czytelnik"}</dd><dt>Konto od</dt><dd>${fmtDate(user.createdAt)}</dd></dl>
+      <button class="btn btn-small btn-ghost" id="reset" type="button">Przywróć dane testowe</button></div>
+      <div class="card"><h3>Zasady wypożyczeń</h3><ul class="muted" style="padding-left:1.1em;margin:0">
+      <li>Lektury: ${LOAN_DAYS_LEKTURA} dni, pozostałe: ${LOAN_DAYS} dni.</li><li>Jedna prolongata o ${RENEW_DAYS} dni (przed terminem zwrotu).</li>
+      <li>Maks. ${MAX_LOANS} wypożyczeń i ${MAX_RESERVATIONS} rezerwacje naraz.</li><li>Rezerwacja czeka 5 dni roboczych.</li></ul></div></div>`;
+  },
+  ksiazki: () => libBooks(),
+  czytelnicy: () => libReaders(),
+};
+
+// ---------- Widoki bibliotekarza ----------
+let loanFilter = "active", loanQuery = "", bookQuery = "";
+function libLoans() {
+  const rs = readers(), avail = BOOKS.filter((b) => available(b) > 0).sort((a, b) => a.title.localeCompare(b.title, "pl"));
+  let list = loanFilter === "history" ? allLoans().filter((l) => l.returned) : activeLoans();
+  if (loanFilter === "late") list = list.filter(isOverdue);
+  const q = loanQuery.toLowerCase();
+  if (q) list = list.filter((l) => `${l.userName} ${l.klasa} ${book(l.bookId).title}`.toLowerCase().includes(q));
+  return `<form class="card lend-box" id="lend-form">
+      <div class="field" style="margin:0"><label for="lend-reader">Czytelnik</label><select id="lend-reader" required><option value="">— wybierz —</option>${rs.map((r) => `<option value="${esc(r.email)}">${esc(r.name)}${r.klasa ? " (" + esc(r.klasa) + ")" : ""}</option>`).join("")}</select></div>
+      <div class="field" style="margin:0"><label for="lend-book">Książka (wolne egzemplarze)</label><select id="lend-book" required><option value="">— wybierz —</option>${avail.map((b) => `<option value="${b.id}">${esc(b.title)} – ${esc(b.author)} (${available(b)})</option>`).join("")}</select></div>
+      <button class="btn">📗 Wypożycz</button>
+    </form>
+    <div class="toolbar-row">
+      <div class="seg" id="loan-seg">${[["active", "Aktywne"], ["late", "Po terminie"], ["history", "Zwrócone"]].map(([k, v]) => `<button type="button" data-f="${k}" aria-pressed="${k === loanFilter}">${v}</button>`).join("")}</div>
+      <input type="search" id="loan-q" placeholder="Szukaj: uczeń, klasa, tytuł…" value="${esc(loanQuery)}" aria-label="Szukaj wypożyczeń">
+    </div>
+    ${list.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Książka</th><th>Czytelnik</th><th>Wypożyczono</th><th>Termin zwrotu</th><th>Status</th><th></th></tr></thead><tbody>
+    ${list.map((l, i) => `<tr class="${isOverdue(l) ? "late" : ""}" style="animation-delay:${Math.min(i, 12) * 0.04}s"><td><div class="t-title">${mini(l.bookId)}${esc(book(l.bookId).title)}</div></td>
+      <td>${esc(l.userName)}${l.klasa ? ` <span class="muted">(${esc(l.klasa)})</span>` : ""}</td><td>${fmtShort(l.from)}</td><td>${fmtShort(l.due)}${l.renewals ? " <span class=\"muted\" title=\"prolongowano\">↻</span>" : ""}</td><td>${loanStatus(l)}</td>
+      <td><div class="acts">${l.returned ? "" : `<button class="btn btn-small btn-ghost" data-renew="${l.id}" ${canRenew(l) ? `disabled title="${esc(canRenew(l))}"` : ""}>Prolonguj</button><button class="btn btn-small" data-return="${l.id}">Zwrot</button>`}</div></td></tr>`).join("")}
+    </tbody></table></div>` : `<div class="empty"><p>Brak wypożyczeń w tym widoku.</p></div>`}`;
+}
+
+function libReservations() {
+  const list = allReservations();
+  return list.length ? `<p class="muted">Gdy uczeń odbierze książkę, kliknij „Wypożycz” – rezerwacja zamieni się w wypożyczenie.</p><div class="table-wrap"><table class="data"><thead><tr><th>Książka</th><th>Czytelnik</th><th>Zarezerwowano</th><th>Status</th><th></th></tr></thead><tbody>
+    ${list.map((r, i) => `<tr style="animation-delay:${i * 0.04}s"><td><div class="t-title">${mini(r.bookId)}${esc(book(r.bookId).title)}</div></td><td>${esc(r.userName)}${r.klasa ? ` <span class="muted">(${esc(r.klasa)})</span>` : ""}</td>
+    <td>${fmtShort(r.createdAt)}</td><td>${resDeadline(r)}</td><td><div class="acts"><button class="btn btn-small btn-ghost" data-cancel="${r.id}">Usuń</button><button class="btn btn-small" data-issue="${r.id}" data-email="${esc(r.email)}" data-book="${r.bookId}">Wypożycz</button></div></td></tr>`).join("")}
+    </tbody></table></div>` : `<div class="empty"><p>Brak rezerwacji do wydania.</p></div>`;
+}
+
+function libBooks() {
+  const q = bookQuery.toLowerCase();
+  const list = BOOKS.filter((b) => !q || `${b.title} ${b.author}`.toLowerCase().includes(q)).sort((a, b) => a.title.localeCompare(b.title, "pl"));
+  return `<div class="toolbar-row"><input type="search" id="book-q" placeholder="Szukaj tytułu lub autora…" value="${esc(bookQuery)}" aria-label="Szukaj książek">
+    <button class="btn" id="add-book" type="button">＋ Dodaj książkę</button></div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Książka</th><th>Rok</th><th>Kategoria</th><th>Egz.</th><th>Wypoż.</th><th>Rez.</th><th>Wolne</th><th></th></tr></thead><tbody>
+    ${list.map((b, i) => `<tr style="animation-delay:${Math.min(i, 12) * 0.03}s"><td><div class="t-title">${mini(b)}<span>${esc(b.title)}<br><small class="muted">${esc(b.author)}</small></span></div></td>
+      <td>${b.year}</td><td>${esc(CATEGORIES[b.category])}${b.isNew ? ' <span class="tag new">Nowość</span>' : ""}</td><td>${b.copies}</td><td>${loanedCount(b.id)}</td><td>${reservedCount(b.id)}</td>
+      <td><strong style="color:${available(b) ? "var(--ok)" : "var(--err)"}">${available(b)}</strong></td>
+      <td><div class="acts"><button class="btn btn-small btn-ghost" data-edit="${b.id}">Edytuj</button><button class="btn btn-small btn-ghost" data-del="${b.id}" aria-label="Usuń ${esc(b.title)}">🗑</button></div></td></tr>`).join("")}
+    </tbody></table></div>`;
+}
+
+function libReaders() {
+  const loans = allLoans(), res = allReservations();
+  return `<div class="table-wrap"><table class="data"><thead><tr><th>Czytelnik</th><th>Klasa</th><th>E-mail</th><th>Wypożyczone</th><th>Po terminie</th><th>Rezerwacje</th><th>Przeczytane</th></tr></thead><tbody>
+    ${readers().map((r, i) => { const mine = loans.filter((l) => l.email === r.email); const act = mine.filter((l) => !l.returned); const late = act.filter(isOverdue).length;
+      return `<tr class="${late ? "late" : ""}" style="animation-delay:${i * 0.04}s"><td><div class="t-title"><span class="avatar" style="background:var(--accent);color:var(--accent-ink)">${esc(initials(r.name))}</span>${esc(r.name)}</div></td><td>${esc(r.klasa || "—")}</td><td>${esc(r.email)}</td>
+      <td>${act.length}</td><td>${late ? `<span class="status late">${late}</span>` : "0"}</td><td>${res.filter((x) => x.email === r.email).length}</td><td>${mine.filter((l) => l.returned).length}</td></tr>`; }).join("")}
+    </tbody></table></div>`;
+}
+
+// ---------- Edytor książki ----------
+const COLORS = ["#8b3a14", "#1f4e5f", "#4a5d23", "#6b2d5c", "#7a5a12", "#2f3e6b", "#7b2e2e", "#285c4d", "#3d3d3d", "#b5651d"];
+function openEditor(id) {
+  const b = id ? book(id) : { title: "", author: "", year: new Date().getFullYear(), category: "popularne", copies: 1, isNew: true, desc: "", color: COLORS[Math.floor(Math.random() * COLORS.length)] };
+  const cur = b.color || coverColor(b.id || "x");
+  const dlg = $("book-editor");
+  dlg.innerHTML = `<button class="icon-btn modal-close" data-close aria-label="Zamknij">✕</button>
+    <form class="modal-body" id="editor-form" novalidate>
+      <div class="editor-preview"><div class="b3-stage b3-big" id="ed-preview"></div><p class="b3-hint">Podgląd – porusz kursorem</p></div>
+      <div>
+        <h2 style="margin-bottom:16px">${id ? "Edytuj książkę" : "Nowa książka"}</h2>
+        <div id="ed-msg" class="alert error" hidden></div>
+        <div class="form-grid">
+          <div class="field wide"><label for="ed-title">Tytuł</label><input id="ed-title" name="title" value="${esc(b.title)}" required></div>
+          <div class="field wide"><label for="ed-author">Autor</label><input id="ed-author" name="author" value="${esc(b.author)}" required></div>
+          <div class="field"><label for="ed-year">Rok wydania</label><input id="ed-year" name="year" type="number" value="${b.year}"></div>
+          <div class="field"><label for="ed-copies">Egzemplarze</label><input id="ed-copies" name="copies" type="number" min="1" value="${b.copies}"></div>
+          <div class="field wide"><label for="ed-cat">Kategoria</label><select id="ed-cat" name="category">${Object.entries(CATEGORIES).map(([k, v]) => `<option value="${k}" ${k === b.category ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+          <div class="field wide"><label for="ed-desc">Opis</label><textarea id="ed-desc" name="desc">${esc(b.desc || "")}</textarea></div>
+          <div class="field wide"><span style="font-weight:600;font-size:.92rem">Kolor okładki</span><div class="color-row">${COLORS.map((c, i) => `<input type="radio" name="color" id="col${i}" value="${c}" ${c === cur ? "checked" : ""}><label for="col${i}" style="background:${c}" title="${c}"></label>`).join("")}</div></div>
+          <label class="check wide" style="margin-bottom:16px"><input type="checkbox" name="isNew" ${b.isNew ? "checked" : ""}> Oznacz jako nowość</label>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">${id ? "Zapisz zmiany" : "Dodaj do katalogu"}</button><button class="btn btn-ghost" type="button" data-close>Anuluj</button></div>
+      </div>
+    </form>`;
+  const form = $("editor-form");
+  const data = () => { const f = Object.fromEntries(new FormData(form)); f.isNew = form.isNew.checked; return f; };
+  const preview = () => { const d = data(); $("ed-preview").innerHTML = book3d({ id: id || "new", title: d.title || "Tytuł", author: d.author || "Autor", color: d.color }, { w: 180, h: 256, d: 32 }); };
+  preview(); tiltFollow($("ed-preview"));
+  form.addEventListener("input", preview);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    try {
+      const saved = id ? updateBook(user, id, data()) : addBook(user, data());
+      dlg.close(); toast(id ? `✏️ Zapisano „${saved.title}”` : `📗 Dodano „${saved.title}” do katalogu`); render();
+    } catch (err) { const m = $("ed-msg"); m.textContent = err.message; m.hidden = false; form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake"); }
+  });
+  dlg.onclick = (e) => { if (e.target === dlg || e.target.closest("[data-close]")) dlg.close(); };
+  dlg.showModal();
+}
+
+// ---------- Podpięcia po renderze ----------
+const AFTER = {
+  wypozyczenia() {
+    if (!LIB) return;
+    $("loan-seg").onclick = (e) => { const b = e.target.closest("[data-f]"); if (b) { loanFilter = b.dataset.f; render(); } };
+    $("loan-q").oninput = (e) => { loanQuery = e.target.value; const pos = e.target.selectionStart; render(); const i = $("loan-q"); i.focus(); i.setSelectionRange(pos, pos); };
+    $("lend-form").onsubmit = (e) => {
+      e.preventDefault();
+      try { const l = lendBook(user, $("lend-reader").value, $("lend-book").value); toast(`📗 Wypożyczono „${book(l.bookId).title}” – zwrot do ${fmtShort(l.due)}`); render(); }
+      catch (err) { toast(err.message, "error"); }
+    };
+  },
+  ksiazki() {
+    $("add-book").onclick = () => openEditor(null);
+    $("book-q").oninput = (e) => { bookQuery = e.target.value; const pos = e.target.selectionStart; render(); const i = $("book-q"); i.focus(); i.setSelectionRange(pos, pos); };
+  },
+  profil() {
+    $("reset").onclick = async () => {
+      if (!confirm("Przywrócić dane testowe? Usunie to zmiany w kontach, książkach, wypożyczeniach i rezerwacjach w tej przeglądarce.")) return;
+      await resetDemo(); sessionStorage.setItem("sp6_toast", "Przywrócono dane testowe."); location.href = "logowanie.html";
+    };
+  },
+};
+
+function fadeRow(btn) {
+  const row = btn.closest("tr, .loan-card");
+  if (!row) return Promise.resolve();
+  return row.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateX(30px)" }], { duration: 280, easing: "ease-in" }).finished;
 }
 
 document.addEventListener("click", async (e) => {
-  const c = e.target.closest("[data-cancel]"), u = e.target.closest("[data-unfav]");
-  if (c) {
-    try {
-      cancelReservation(user, c.dataset.cancel);
-      await removeAnim(c);
-      toast(c.dataset.issued ? "✅ Książka wydana – rezerwacja zamknięta." : "Rezerwacja anulowana.");
-      renderAll();
-    } catch (err) { toast(err.message, "error"); }
-  } else if (u) {
-    toggleFavorite(user, u.dataset.unfav);
-    await removeAnim(u);
-    toast("Usunięto z ulubionych");
-    renderAll();
-  }
-});
-
-$("reset")?.addEventListener("click", async () => {
-  if (!confirm("Przywrócić dane testowe? Usunie to konta i rezerwacje utworzone w tej przeglądarce.")) return;
-  await resetDemo();
-  sessionStorage.setItem("sp6_toast", "Przywrócono dane testowe.");
-  location.href = "logowanie.html";
+  const t = e.target.closest("[data-renew],[data-return],[data-cancel],[data-issue],[data-unfav],[data-edit],[data-del]");
+  if (!t || !$("panel").contains(t)) return;
+  try {
+    if (t.dataset.renew) { const l = renewLoan(user, t.dataset.renew); toast(`↻ Przedłużono do ${fmtDate(l.due)}`); }
+    else if (t.dataset.return) { await fadeRow(t); const l = returnLoan(user, t.dataset.return); toast(`✅ Przyjęto zwrot „${book(l.bookId).title}”`); }
+    else if (t.dataset.cancel) { cancelReservation(user, t.dataset.cancel); await fadeRow(t); toast(LIB ? "Rezerwacja usunięta." : "Rezerwacja anulowana."); }
+    else if (t.dataset.issue) { lendBook(user, t.dataset.email, t.dataset.book, t.dataset.issue); await fadeRow(t); toast("📗 Rezerwacja zamieniona w wypożyczenie."); }
+    else if (t.dataset.unfav) { toggleFavorite(user, t.dataset.unfav); await fadeRow(t); toast("Usunięto z ulubionych"); }
+    else if (t.dataset.edit) { openEditor(t.dataset.edit); return; }
+    else if (t.dataset.del) {
+      const b = book(t.dataset.del);
+      if (!confirm(`Usunąć „${b.title}” z katalogu?`)) return;
+      deleteBook(user, b.id); await fadeRow(t); toast(`🗑 Usunięto „${b.title}”`);
+    }
+    render();
+  } catch (err) { toast(err.message, "error"); }
 });
 
 if (!user) location.replace("logowanie.html?next=konto.html");
-else init();
+else {
+  $("u-initials").textContent = initials(user.name);
+  $("u-first").textContent = user.name.split(" ")[0];
+  $("u-role-eyebrow").textContent = (LIB ? "Panel bibliotekarza" : "Czytelnik") + (user.demo ? " · konto testowe" : "");
+  $("loading").hidden = true; $("account").hidden = false;
+  render();
+}
 </script>
 </body>
 </html>

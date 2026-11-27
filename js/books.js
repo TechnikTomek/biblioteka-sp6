@@ -1,6 +1,8 @@
-// Katalog książek – edytuj tę listę, aby zmienić zbiory widoczne na stronie.
+// Katalog książek.
+// DEFAULT_BOOKS to zbiór startowy. Bibliotekarz może dodawać, edytować i usuwać książki
+// w panelu „Moje konto” – zmiany zapisują się w przeglądarce (klucz sp6_books).
 // category: "lektura-1-3" | "lektura-4-6" | "lektura-7-8" | "popularne"
-export const BOOKS = [
+export const DEFAULT_BOOKS = [
   { id: "b01", title: "Pan Tadeusz", author: "Adam Mickiewicz", year: 1834, category: "lektura-7-8", copies: 12, isNew: false,
     desc: "Epopeja narodowa o życiu szlachty na Litwie w latach 1811–1812 – spór o zamek, polowania, uczty i miłość Tadeusza i Zosi. Naszego patrona, Michała Elwiro Andriollego, znamy właśnie z ilustracji do tego dzieła." },
   { id: "b02", title: "W pustyni i w puszczy", author: "Henryk Sienkiewicz", year: 1911, category: "lektura-4-6", copies: 8, isNew: false,
@@ -53,3 +55,26 @@ export const CATEGORIES = {
   "lektura-7-8": "Lektury kl. 7–8",
   "popularne": "Popularne",
 };
+
+const KEY = "sp6_books";
+function load() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY));
+    if (Array.isArray(v) && v.length) return v;
+  } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_BOOKS));
+}
+
+/** Żywa lista książek – wspólna dla wszystkich modułów strony. */
+export const BOOKS = load();
+
+export function saveBooks() {
+  try { localStorage.setItem(KEY, JSON.stringify(BOOKS)); } catch {}
+}
+
+export function resetBooks() {
+  BOOKS.splice(0, BOOKS.length, ...JSON.parse(JSON.stringify(DEFAULT_BOOKS)));
+  try { localStorage.removeItem(KEY); } catch {}
+}
+
+export const findBook = (id) => BOOKS.find((b) => b.id === id);

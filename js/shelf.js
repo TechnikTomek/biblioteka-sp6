@@ -41,6 +41,7 @@ export function initShelf(stage, { featuredId } = {}) {
   function makeFly(b) {
     const f = document.createElement("div");
     f.className = "fly";
+    f.style.setProperty("--c", coverColor(b));
     f.dataset.open = b.id;
     f.setAttribute("role", "button");
     f.setAttribute("aria-label", `Szczegóły: ${b.title}`);

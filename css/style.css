@@ -421,3 +421,126 @@ dialog.modal::backdrop { background: rgba(20,14,8,.55); backdrop-filter: blur(3p
 }
 .shelf-swipe { display: none; text-align: center; font-size: .85rem; color: var(--ink-soft); margin: 10px 0 0; }
 @media (max-width: 1100px) { .shelf-swipe { display: block; } }
+
+/* ==========================================================
+   Książki 3D
+   ========================================================== */
+.b3-stage { position: relative; display: grid; place-items: center; height: 262px; perspective: 1100px; cursor: pointer; border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 65%); }
+.b3-stage:focus-visible { outline: 2px solid var(--accent-2); }
+.b3 { position: relative; width: var(--w); height: var(--h); transform-style: preserve-3d; }
+.b3-inner { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateY(-28deg) rotateX(6deg); transition: transform .8s var(--ease); }
+.b3-face { position: absolute; left: 0; top: 0; }
+.b3-front { width: var(--w); height: var(--h); transform: translateZ(calc(var(--d) / 2)); transform-origin: 0 50%; transition: transform .8s var(--ease); z-index: 2; border-radius: 2px 6px 6px 2px; overflow: hidden; backface-visibility: hidden; }
+.b3-front .book-cover { width: 100%; height: 100%; aspect-ratio: auto; border-radius: inherit; box-shadow: inset 6px 0 0 rgba(0,0,0,.18), inset 8px 0 0 rgba(255,255,255,.08); }
+.b3-front::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.28), transparent 35%, transparent 65%, rgba(0,0,0,.12)); pointer-events: none; }
+.b3-back { width: var(--w); height: var(--h); transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); background: linear-gradient(90deg, rgba(0,0,0,.25), rgba(0,0,0,.05)), var(--c); border-radius: 6px 2px 2px 6px; }
+.b3-spine { width: var(--d); height: var(--h); left: calc(var(--w) / 2 - var(--d) / 2); transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,255,255,.12) 45%, rgba(0,0,0,.3)), var(--c); }
+.b3-spine span { writing-mode: vertical-rl; transform: rotate(180deg); color: #fff; font: 600 .7rem var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 88%; }
+.b3-pages { width: calc(var(--d) - 2px); height: calc(var(--h) - 6px); top: 3px; left: calc(var(--w) / 2 - var(--d) / 2 + 1px); transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 3px));
+  background: repeating-linear-gradient(90deg, #f7f0e1 0 1px, #e3d8c1 1px 2px); box-shadow: inset 0 0 6px rgba(0,0,0,.15); }
+.b3-top, .b3-bottom { width: calc(var(--w) - 4px); height: calc(var(--d) - 2px); top: calc(var(--h) / 2 - var(--d) / 2 + 1px);
+  background: repeating-linear-gradient(0deg, #f7f0e1 0 1px, #e3d8c1 1px 2px); }
+.b3-top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 3px)); }
+.b3-bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 3px)); }
+/* Pierwsza kartka pod okładką – widać ją, gdy okładka się uchyla */
+.b3-inner::before { content: ""; position: absolute; left: 0; top: 3px; width: calc(var(--w) - 4px); height: calc(var(--h) - 6px); transform: translateZ(calc(var(--d) / 2 - 1px));
+  background: repeating-linear-gradient(transparent 0 15px, rgba(120,100,70,.18) 15px 16px), linear-gradient(90deg, #e8dcc4, #fbf6ea 12%); border-radius: 0 4px 4px 0; }
+.b3-shadow { position: absolute; left: 6%; right: -6%; bottom: -16px; height: 22px; border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,.32), transparent 70%); filter: blur(3px); transition: transform .8s var(--ease), opacity .8s; transform: translateZ(-40px); }
+.b3-stage:hover .b3-inner, .b3-stage:focus-visible .b3-inner { transform: rotateY(-12deg) rotateX(8deg) translateY(-8px); }
+.b3-stage:hover .b3-front, .b3-stage:focus-visible .b3-front { transform: translateZ(calc(var(--d) / 2)) rotateY(-34deg); }
+.b3-stage:hover .b3-shadow { transform: translateZ(-40px) scale(.9); opacity: .7; }
+/* Wjazd przy przewijaniu: książka obraca się z grzbietu na okładkę */
+.card-book.reveal:not(.in) .b3-inner { transform: rotateY(-95deg) rotateX(6deg) translateY(20px); }
+.card-book.reveal .b3-inner { transition: transform 1.1s var(--ease); transition-delay: calc(var(--d, 0s) + .1s); }
+.b3-big { height: 340px; }
+.b3-big .b3-inner { transition: transform .25s ease-out; }
+.modal-body .b3-stage { background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%); }
+.b3-hint { text-align: center; font-size: .78rem; color: var(--ink-soft); margin-top: 6px; }
+@media (max-width: 640px) { .modal-body .b3-stage { height: 300px; } }
+
+/* Lecąca miniaturka po rezerwacji */
+.fly-mini { position: fixed; z-index: 90; width: 40px; height: 56px; border-radius: 3px 6px 6px 3px; box-shadow: inset 4px 0 0 rgba(0,0,0,.2), 0 8px 20px rgba(0,0,0,.3); pointer-events: none; }
+
+/* Grubość leżącej książki na stole */
+.fly.landed { box-shadow: 1px 2px 0 #f4ecdc, 2px 4px 0 #e6dbc4, 3px 6px 0 #f4ecdc, 4px 8px 0 #ddd0b6, 5px 10px 0 color-mix(in srgb, var(--c, #555) 80%, #000), 18px 30px 30px rgba(0,0,0,.35); }
+
+/* ==========================================================
+   Zakładki panelu konta
+   ========================================================== */
+.ptabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-bottom: 22px; position: relative; }
+.ptabs button { border: 0; background: none; padding: 12px 16px; font: 600 .95rem var(--sans); color: var(--ink-soft); cursor: pointer; position: relative; display: inline-flex; gap: 8px; align-items: center; border-radius: 10px 10px 0 0; transition: color .2s, background .2s; }
+.ptabs button:hover { background: var(--paper-2); color: var(--ink); }
+.ptabs button[aria-selected="true"] { color: var(--accent); }
+.ptabs button::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); transform: scaleX(0); transition: transform .35s var(--ease); }
+.ptabs button[aria-selected="true"]::after { transform: scaleX(1); }
+.ptab-panel { animation: fadeUp .45s var(--ease); }
+.pill-n { font: 700 .72rem var(--sans); background: var(--paper-2); color: var(--ink-soft); border-radius: 999px; padding: 1px 8px; }
+.ptabs button[aria-selected="true"] .pill-n { background: var(--accent); color: var(--accent-ink); }
+.pill-n.warn { background: var(--err); color: #fff; }
+
+/* Tabela wypożyczeń / książek */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+table.data { width: 100%; border-collapse: collapse; font-size: .93rem; min-width: 640px; }
+table.data th { text-align: left; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); background: var(--paper-2); padding: 12px 14px; position: sticky; top: 0; }
+table.data td { padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: middle; }
+table.data tbody tr { transition: background .2s; animation: fadeUp .4s var(--ease) both; }
+table.data tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+table.data tr.late td { background: color-mix(in srgb, var(--err) 7%, transparent); }
+table.data .t-title { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+table.data .mini { width: 26px; height: 36px; border-radius: 2px 4px 4px 2px; flex: none; box-shadow: inset 3px 0 0 rgba(0,0,0,.2); }
+table.data .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.status { display: inline-block; font-size: .75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.status.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.status.soon { background: color-mix(in srgb, var(--gold) 22%, transparent); color: color-mix(in srgb, var(--gold) 70%, var(--ink)); }
+.status.late { background: color-mix(in srgb, var(--err) 14%, transparent); color: var(--err); }
+.status.done { background: var(--paper-2); color: var(--ink-soft); }
+
+/* Karty wypożyczeń czytelnika */
+.loan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.loan-card { display: grid; grid-template-columns: 74px 1fr; gap: 16px; align-items: start; padding: 16px; animation: fadeUp .5s var(--ease) both; }
+.loan-card .b3-stage { height: 104px; background: none; }
+.loan-card h3 { font-size: 1.02rem; margin: 0 0 2px; font-family: var(--sans); }
+.ring { --p: 50; --col: var(--ok); width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: conic-gradient(var(--col) calc(var(--p) * 1%), var(--paper-2) 0); position: relative; }
+.ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--surface); }
+.ring b { position: relative; font: 700 .9rem/1 var(--sans); text-align: center; }
+.ring b small { display: block; font-size: .58rem; font-weight: 600; color: var(--ink-soft); }
+.loan-meta { display: flex; gap: 12px; align-items: center; margin: 10px 0; }
+.loan-meta .muted { font-size: .85rem; line-height: 1.35; }
+
+/* Formularze w panelu */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 14px; }
+.form-grid .wide { grid-column: 1 / -1; }
+textarea { min-height: 90px; resize: vertical; }
+.lend-box { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; padding: 18px; margin-bottom: 20px; }
+@media (max-width: 760px) { .lend-box { grid-template-columns: 1fr; } }
+.color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-row label { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255,255,255,.4); transition: transform .2s; }
+.color-row input { position: absolute; opacity: 0; pointer-events: none; }
+.color-row input:checked + label { transform: scale(1.2); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.editor-preview { display: grid; place-items: center; }
+.toolbar-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.toolbar-row input { max-width: 340px; }
+.seg { display: inline-flex; background: var(--paper-2); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: none; padding: 6px 12px; border-radius: 999px; font: 600 .82rem var(--sans); color: var(--ink-soft); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+/* Ozdobniki strony */
+.section-head h2 { position: relative; display: block; width: fit-content; }
+.section-head h2::after { content: ""; position: absolute; left: 0; bottom: -6px; height: 3px; width: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform 1s var(--ease) .3s; }
+.section-head.in h2::after, .reveal.in .section-head h2::after { transform: scaleX(.35); }
+.scroll-cue { position: absolute; left: 50%; bottom: 22px; width: 26px; height: 42px; border: 2px solid color-mix(in srgb, var(--ink) 35%, transparent); border-radius: 14px; transform: translateX(-50%); z-index: 1; }
+.scroll-cue::before { content: ""; position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; border-radius: 2px; background: var(--accent); transform: translateX(-50%); animation: cue 1.8s ease-in-out infinite; }
+@keyframes cue { 0% { opacity: 0; transform: translate(-50%, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 14px); } }
+@media (max-width: 760px) { .scroll-cue { display: none; } }
+.card.tilt { transform-style: preserve-3d; will-change: transform; }
+body { animation: pageIn .6s var(--ease); }
+@keyframes pageIn { from { opacity: 0; } }
+.b3-sm .book-cover { padding: 8px 6px 6px 10px; }
+.b3-sm .book-cover .t { font-size: .56rem; margin-top: 4px; line-height: 1.15; }
+.b3-sm .book-cover .a { font-size: .42rem; }
+.b3-sm .book-cover .orn, .b3-sm .book-cover::after { display: none; }
+.b3-sm .b3-spine span { font-size: .4rem; }
+.editor-preview { align-content: start; gap: 4px; padding-top: 30px; }

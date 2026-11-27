@@ -37,6 +37,7 @@
 <main id="main">
   <section class="hero">
     <div class="floaters" aria-hidden="true"></div>
+    <a class="scroll-cue" href="#polka" aria-label="Przewiń w dół"></a>
     <div class="container hero-grid">
       <div class="stagger">
         <p class="eyebrow">Szkoła Podstawowa Nr 6</p>
@@ -255,7 +256,7 @@
 <script type="module">
 import { userPromise, available, observeReveal, countUp, esc, fmtShort } from "./js/app.js";
 import { BOOKS } from "./js/books.js";
-import { bookCard, cover, wireBooks, makeCtx } from "./js/ui.js";
+import { bookCard, book3d, tiltFollow, wireBooks, makeCtx } from "./js/ui.js";
 import { initShelf } from "./js/shelf.js";
 
 // Godziny otwarcia: [dzień tygodnia (1=pon), od, do]
@@ -300,7 +301,8 @@ document.getElementById("events").innerHTML = EVENTS.map(([d, t, p], i) => {
 // Książka tygodnia – zmienia się co tydzień
 const week = Math.floor((Date.now() / 864e5 + 3) / 7);
 const pick = BOOKS[week % BOOKS.length];
-document.getElementById("week-cover").innerHTML = `<div class="cover-wrap" data-open="${pick.id}" role="button" tabindex="0">${cover(pick)}</div>`;
+document.getElementById("week-cover").innerHTML = `<div class="b3-stage b3-big" data-open="${pick.id}" role="button" tabindex="0" aria-label="Szczegóły: ${esc(pick.title)}">${book3d(pick, { w: 210, h: 298, d: 38 })}</div><p class="b3-hint">Porusz kursorem nad książką</p>`;
+tiltFollow(document.querySelector("#week-cover .b3-stage"));
 document.getElementById("week-title").textContent = pick.title;
 document.getElementById("week-author").textContent = `${pick.author} · ${pick.year}`;
 document.getElementById("week-desc").textContent = pick.desc;
